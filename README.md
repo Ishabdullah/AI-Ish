@@ -3,8 +3,9 @@
 **Your private, always-on, super-intelligent companion that never phones home.**
 
 [![Build Status](https://github.com/Ishabdullah/AI-Ish/workflows/Build%20AI%20Ish%20APK/badge.svg)](https://github.com/Ishabdullah/AI-Ish/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com/)
+
+**Copyright © 2025 Ismail Abdullah. All rights reserved.**
 
 ---
 
@@ -151,7 +152,7 @@ AI Ish is designed with privacy as the #1 priority:
 ✅ **No cloud servers, no API keys required**
 ✅ **Optional internet access only for knowledge fetching**
 ✅ **Explicit permission required for every sensitive action**
-✅ **Open source - audit the code yourself**
+✅ **Proprietary software - contact author for licensing inquiries**
 
 ---
 
@@ -190,23 +191,13 @@ app/src/main/java/com/ishabdullah/aiish/
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) before submitting PRs.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This software is proprietary and confidential. Unauthorized copying, modification, distribution, or use of this software, via any medium, is strictly prohibited without express written permission from Ismail Abdullah.
+
+For licensing inquiries, please contact: **ismail.t.abdullah@gmail.com**
+
+See the [LICENSE](LICENSE) file for complete terms.
 
 ---
 
@@ -223,8 +214,9 @@ AI Ish merges the best components from four private repositories:
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/Ishabdullah/AI-Ish/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Ishabdullah/AI-Ish/discussions)
+For support, licensing inquiries, or other questions:
+- **Email**: ismail.t.abdullah@gmail.com
+- **Issues**: [GitHub Issues](https://github.com/Ishabdullah/AI-Ish/issues) (for bug reports only)
 
 ---
 
@@ -248,6 +240,10 @@ AI Ish merges the best components from four private repositories:
 
 **Made with ❤️ for Privacy**
 
-[⭐ Star this repo](https://github.com/Ishabdullah/AI-Ish) | [🐛 Report Bug](https://github.com/Ishabdullah/AI-Ish/issues) | [✨ Request Feature](https://github.com/Ishabdullah/AI-Ish/issues)
+**Copyright © 2025 Ismail Abdullah. All rights reserved.**
+
+Contact: ismail.t.abdullah@gmail.com
+
+[🐛 Report Bug](https://github.com/Ishabdullah/AI-Ish/issues)
 
 </div>

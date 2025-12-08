@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2025 Ismail Abdullah. All rights reserved.
+ *
+ * This software and all associated files are the exclusive property of Ismail Abdullah.
+ * Unauthorized use, copying, modification, or distribution is strictly prohibited.
+ *
+ * Contact: ismail.t.abdullah@gmail.com
+ */
+
 plugins {
     id("com.android.application") version "8.2.2" apply false
     id("org.jetbrains.kotlin.android") version "1.9.22" apply false
