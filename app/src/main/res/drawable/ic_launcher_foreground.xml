@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.7"
+        android:scaleY="0.7"
+        android:translateX="16.2"
+        android:translateY="16.2">
+        <!-- AI Ish Logo: Circuit brain icon -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,10C33.6,10 17,26.6 17,47c0,20.4 16.6,37 37,37s37,-16.6 37,-37C91,26.6 74.4,10 54,10zM54,78c-17.1,0 -31,-13.9 -31,-31s13.9,-31 31,-31s31,13.9 31,31S71.1,78 54,78z"/>
+        <path
+            android:fillColor="#6200EE"
+            android:pathData="M54,22c-13.8,0 -25,11.2 -25,25s11.2,25 25,25s25,-11.2 25,-25S67.8,22 54,22z"/>
+        <!-- Circuit connections -->
+        <path
+            android:fillColor="#03DAC6"
+            android:pathData="M54,32 L54,42 M54,52 L54,62 M44,47 L34,47 M64,47 L74,47"
+            android:strokeWidth="3"
+            android:strokeColor="#03DAC6"/>
+        <!-- Central node -->
+        <circle
+            android:fillColor="#FFFFFF"
+            android:cx="54"
+            android:cy="47"
+            android:radius="5"/>
+    </group>
+</vector>
