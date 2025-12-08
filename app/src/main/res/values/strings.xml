@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Ish</string>
+    <string name="dashboard_title">AI Ish Dashboard</string>
+    <string name="chat_title">Chat with Ish</string>
+    <string name="settings_title">Settings</string>
+    <string name="wake_word">Hey Ish</string>
+    <string name="tagline">Your private, always-on, super-intelligent companion</string>
+</resources>
