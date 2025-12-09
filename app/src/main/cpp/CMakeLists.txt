@@ -12,6 +12,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -fvisibility=hidden")
 
+# OpenCL support (will be enabled when OpenCL headers are vendored)
+# For now, build without OpenCL but with placeholder interface
+set(ENABLE_OPENCL OFF)
+
+if(ENABLE_OPENCL)
+    add_definitions(-DENABLE_OPENCL)
+    # OpenCL library path will be added when vendored
+    # find_library(opencl-lib OpenCL)
+endif()
+
 # ARM NEON optimizations for mobile
 if(ANDROID_ABI STREQUAL "arm64-v8a")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8-a+fp+simd")
@@ -24,6 +34,7 @@ find_library(android-lib android)
 # Source files
 set(SOURCES
     llm_bridge.cpp
+    gpu_backend.cpp
 )
 
 # Create shared library
@@ -34,6 +45,11 @@ target_link_libraries(aiish_native
     ${log-lib}
     ${android-lib}
 )
+
+# Link OpenCL when enabled
+if(ENABLE_OPENCL)
+    # target_link_libraries(aiish_native ${opencl-lib})
+endif()
 
 # Include directories
 target_include_directories(aiish_native PRIVATE

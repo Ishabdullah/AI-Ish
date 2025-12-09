@@ -42,6 +42,7 @@ class LLMInferenceEngine {
 
     private var isModelLoaded = false
     private var contextSize = DEFAULT_CONTEXT_SIZE
+    private var currentGpuLayers = 0
 
     // Native methods
     private external fun nativeLoadModel(
@@ -93,7 +94,13 @@ class LLMInferenceEngine {
             }
 
             isModelLoaded = true
-            Timber.i("Model loaded successfully (ctx=$contextSize, gpu_layers=$gpuLayers)")
+            currentGpuLayers = gpuLayers
+
+            if (gpuLayers > 0) {
+                Timber.i("Model loaded successfully with GPU acceleration (ctx=$contextSize, gpu_layers=$gpuLayers)")
+            } else {
+                Timber.i("Model loaded successfully in CPU mode (ctx=$contextSize)")
+            }
             true
         } catch (e: Exception) {
             Timber.e(e, "Failed to load model")
@@ -227,6 +234,28 @@ class LLMInferenceEngine {
      * Check if model is loaded
      */
     fun isLoaded(): Boolean = isModelLoaded
+
+    /**
+     * Get current GPU layer count
+     */
+    fun getGpuLayers(): Int = currentGpuLayers
+
+    /**
+     * Check if GPU acceleration is active
+     */
+    fun isGpuAccelerated(): Boolean = currentGpuLayers > 0
+
+    /**
+     * Get performance mode string
+     */
+    fun getPerformanceMode(): String {
+        return when {
+            !isModelLoaded -> "Not Loaded"
+            currentGpuLayers == 0 -> "CPU Only"
+            currentGpuLayers < 20 -> "Hybrid (GPU: $currentGpuLayers layers)"
+            else -> "GPU Accelerated ($currentGpuLayers layers)"
+        }
+    }
 
     /**
      * Free model and release resources
