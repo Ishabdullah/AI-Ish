@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ishabdullah.aiish.domain.models.Message
 import com.ishabdullah.aiish.domain.models.MessageRole
+import com.ishabdullah.aiish.ml.LLMInferenceEngine
+import com.ishabdullah.aiish.ml.TokenStreamHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +13,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * Chat ViewModel - Manages chat conversation state
+ * Chat ViewModel - Manages chat conversation state with real LLM inference
  */
 class ChatViewModel : ViewModel() {
 
@@ -24,6 +26,21 @@ class ChatViewModel : ViewModel() {
     private val _shouldOpenCamera = MutableStateFlow(false)
     val shouldOpenCamera: StateFlow<Boolean> = _shouldOpenCamera.asStateFlow()
 
+    // LLM inference components
+    private val llmEngine = LLMInferenceEngine()
+    private val streamHandler = TokenStreamHandler()
+
+    // Streaming state
+    private val _streamingMessage = MutableStateFlow<String?>(null)
+    val streamingMessage: StateFlow<String?> = _streamingMessage.asStateFlow()
+
+    init {
+        Timber.d("ChatViewModel initialized")
+    }
+
+    /**
+     * Send message and get AI response with streaming
+     */
     fun sendMessage(content: String) {
         viewModelScope.launch {
             try {
@@ -41,9 +58,15 @@ class ChatViewModel : ViewModel() {
                 _messages.value = _messages.value + userMessage
 
                 _isLoading.value = true
+                _streamingMessage.value = ""
 
-                // Simulate AI response (replace with actual LLM call)
-                val aiResponse = generateResponse(content)
+                // Generate AI response with streaming
+                val aiResponse = if (llmEngine.isLoaded()) {
+                    generateStreamingResponse(content)
+                } else {
+                    Timber.w("LLM not loaded, using fallback")
+                    generateFallbackResponse(content)
+                }
 
                 val assistantMessage = Message(
                     content = aiResponse,
@@ -53,9 +76,78 @@ class ChatViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 Timber.e(e, "Error sending message")
+                val errorMessage = Message(
+                    content = "Sorry, I encountered an error: ${e.message}",
+                    role = MessageRole.ASSISTANT
+                )
+                _messages.value = _messages.value + errorMessage
             } finally {
                 _isLoading.value = false
+                _streamingMessage.value = null
             }
+        }
+    }
+
+    /**
+     * Generate response using actual LLM with token streaming
+     */
+    private suspend fun generateStreamingResponse(userMessage: String): String {
+        try {
+            // Build prompt with context
+            val prompt = buildPrompt(userMessage)
+
+            // Start streaming generation
+            val tokenFlow = llmEngine.generateStream(
+                prompt = prompt,
+                maxTokens = 512,
+                temperature = 0.7f,
+                topP = 0.9f,
+                stopSequences = listOf("\n\nUser:", "\n\nHuman:", "<|end|>", "</s>")
+            )
+
+            // Collect streaming tokens and update UI
+            val fullResponse = StringBuilder()
+            tokenFlow.collect { token ->
+                fullResponse.append(token)
+                _streamingMessage.value = fullResponse.toString()
+            }
+
+            return fullResponse.toString().trim()
+
+        } catch (e: Exception) {
+            Timber.e(e, "Error during streaming generation")
+            return "I encountered an error while generating a response. Please try again."
+        }
+    }
+
+    /**
+     * Build prompt with conversation context
+     */
+    private fun buildPrompt(userMessage: String): String {
+        val context = _messages.value.takeLast(5).joinToString("\n") { msg ->
+            when (msg.role) {
+                MessageRole.USER -> "User: ${msg.content}"
+                MessageRole.ASSISTANT -> "Assistant: ${msg.content}"
+            }
+        }
+
+        return """You are Ish, a helpful AI assistant running entirely on-device with complete privacy.
+You are knowledgeable, concise, and friendly.
+
+${if (context.isNotEmpty()) "Conversation context:\n$context\n\n" else ""}User: $userMessage
+Assistant:"""
+    }
+
+    /**
+     * Fallback response when LLM is not loaded
+     */
+    private fun generateFallbackResponse(userMessage: String): String {
+        return when {
+            userMessage.lowercase().contains("hello") || userMessage.lowercase().contains("hey") ->
+                "Hello! I'm Ish, your private AI companion. However, my language model isn't loaded yet. Please download a model first."
+
+            else ->
+                "I'm AI Ish, your private on-device companion. My language model isn't loaded yet. Please download a model from the dashboard to start chatting!"
         }
     }
 
@@ -72,28 +164,38 @@ class ChatViewModel : ViewModel() {
         _shouldOpenCamera.value = false
     }
 
-    private suspend fun generateResponse(userMessage: String): String {
-        // Placeholder response - will be replaced with actual LLM integration
-        return when {
-            userMessage.lowercase().contains("hello") || userMessage.lowercase().contains("hey") ->
-                "Hello! I'm Ish, your private AI companion. How can I help you today?"
+    /**
+     * Load LLM model (called after download completes)
+     */
+    fun loadModel(modelPath: String, contextSize: Int = 4096, gpuLayers: Int = 0) {
+        viewModelScope.launch {
+            try {
+                Timber.i("Loading model from: $modelPath")
+                _isLoading.value = true
 
-            userMessage.lowercase().contains("weather") ->
-                "I can fetch real-time weather data for you using the OpenMeteo API. What location would you like weather for?"
+                val success = llmEngine.loadModel(modelPath, contextSize, gpuLayers)
 
-            userMessage.lowercase().contains("price") || userMessage.lowercase().contains("bitcoin") ->
-                "I can check cryptocurrency prices using CoinGecko. Which crypto would you like to know about?"
-
-            userMessage.lowercase().contains("math") || userMessage.contains(Regex("\\d+\\s*[+\\-*/]\\s*\\d+")) ->
-                "I have a deterministic math reasoner that can solve equations step-by-step. Let me calculate that for you."
-
-            else ->
-                "I'm AI Ish, your private on-device companion. I can help with:\n" +
-                        "• Real-time knowledge (weather, crypto, news, sports)\n" +
-                        "• Math calculations with step-by-step solving\n" +
-                        "• Code assistance\n" +
-                        "• Vision analysis (say 'what do you see?')\n\n" +
-                        "What would you like to know?"
+                if (success) {
+                    Timber.i("Model loaded successfully!")
+                    // Add system message
+                    val systemMessage = Message(
+                        content = "Model loaded! I'm ready to chat. How can I help you?",
+                        role = MessageRole.ASSISTANT
+                    )
+                    _messages.value = _messages.value + systemMessage
+                } else {
+                    Timber.e("Failed to load model")
+                    val errorMessage = Message(
+                        content = "Failed to load model. Please try downloading again.",
+                        role = MessageRole.ASSISTANT
+                    )
+                    _messages.value = _messages.value + errorMessage
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading model")
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 

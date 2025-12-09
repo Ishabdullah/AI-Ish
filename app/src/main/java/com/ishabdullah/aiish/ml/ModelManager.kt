@@ -157,6 +157,19 @@ class ModelManager(private val context: Context) {
         return if (file.exists()) file else null
     }
 
+    /**
+     * Get absolute path to downloaded model file
+     * Used for loading into LLMInferenceEngine
+     */
+    fun getModelPath(modelInfo: ModelInfo): String? {
+        return getModelFile(modelInfo)?.absolutePath
+    }
+
+    /**
+     * Get the models directory path
+     */
+    fun getModelsDirectory(): File = modelsDir
+
     private fun verifyChecksum(file: File, expectedSha256: String): Boolean {
         if (expectedSha256.startsWith("placeholder")) {
             Timber.w("Skipping checksum verification (placeholder hash)")
