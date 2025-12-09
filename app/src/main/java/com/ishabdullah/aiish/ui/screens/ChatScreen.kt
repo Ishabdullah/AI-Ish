@@ -20,10 +20,19 @@ import com.ishabdullah.aiish.domain.models.MessageRole
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onOpenCamera: () -> Unit = {}
 ) {
     val messages by viewModel.messages.collectAsState()
+    val shouldOpenCamera by viewModel.shouldOpenCamera.collectAsState()
     var inputText by remember { mutableStateOf("") }
+
+    LaunchedEffect(shouldOpenCamera) {
+        if (shouldOpenCamera) {
+            onOpenCamera()
+            viewModel.resetCameraTrigger()
+        }
+    }
 
     Scaffold(
         topBar = {

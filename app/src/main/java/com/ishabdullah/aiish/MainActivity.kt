@@ -9,16 +9,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.ishabdullah.aiish.ui.screens.ChatScreen
-import com.ishabdullah.aiish.ui.screens.DashboardScreen
-import com.ishabdullah.aiish.ui.screens.SettingsScreen
+import com.ishabdullah.aiish.data.local.preferences.PreferencesManager
+import com.ishabdullah.aiish.ui.screens.*
 import com.ishabdullah.aiish.ui.theme.AIIshTheme
 import com.ishabdullah.aiish.ui.viewmodels.ChatViewModel
 import timber.log.Timber
@@ -74,11 +74,26 @@ class MainActivity : ComponentActivity() {
 fun AiIshNavigation() {
     val navController = rememberNavController()
     val chatViewModel: ChatViewModel = viewModel()
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+
+    val hasCompletedOnboarding by preferencesManager.hasCompletedOnboarding.collectAsState(initial = false)
+
+    val startDestination = if (hasCompletedOnboarding) "dashboard" else "model_download"
 
     NavHost(
         navController = navController,
-        startDestination = "dashboard"
+        startDestination = startDestination
     ) {
+        composable("model_download") {
+            ModelDownloadScreen(
+                onDownloadComplete = {
+                    navController.navigate("dashboard") {
+                        popUpTo("model_download") { inclusive = true }
+                    }
+                }
+            )
+        }
         composable("dashboard") {
             DashboardScreen(
                 onNavigateToChat = { navController.navigate("chat") },
@@ -88,6 +103,12 @@ fun AiIshNavigation() {
         composable("chat") {
             ChatScreen(
                 viewModel = chatViewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onOpenCamera = { navController.navigate("camera") }
+            )
+        }
+        composable("camera") {
+            CameraScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

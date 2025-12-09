@@ -21,9 +21,18 @@ class ChatViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _shouldOpenCamera = MutableStateFlow(false)
+    val shouldOpenCamera: StateFlow<Boolean> = _shouldOpenCamera.asStateFlow()
+
     fun sendMessage(content: String) {
         viewModelScope.launch {
             try {
+                // Check for vision trigger
+                if (isVisionQuery(content)) {
+                    _shouldOpenCamera.value = true
+                    return@launch
+                }
+
                 // Add user message
                 val userMessage = Message(
                     content = content,
@@ -50,6 +59,19 @@ class ChatViewModel : ViewModel() {
         }
     }
 
+    private fun isVisionQuery(message: String): Boolean {
+        val lowerMessage = message.lowercase()
+        return lowerMessage.contains("what do you see") ||
+                lowerMessage.contains("describe this") ||
+                lowerMessage.contains("look at") ||
+                lowerMessage.contains("what's this") ||
+                lowerMessage.contains("vision mode")
+    }
+
+    fun resetCameraTrigger() {
+        _shouldOpenCamera.value = false
+    }
+
     private suspend fun generateResponse(userMessage: String): String {
         // Placeholder response - will be replaced with actual LLM integration
         return when {
@@ -70,7 +92,7 @@ class ChatViewModel : ViewModel() {
                         "• Real-time knowledge (weather, crypto, news, sports)\n" +
                         "• Math calculations with step-by-step solving\n" +
                         "• Code assistance\n" +
-                        "• And much more!\n\n" +
+                        "• Vision analysis (say 'what do you see?')\n\n" +
                         "What would you like to know?"
         }
     }
