@@ -70,7 +70,7 @@ class TokenStreamHandler {
                     _tokensPerSecond.value = tokensPerSec
                 }
 
-                Timber.v("Token $tokenCount: '$token' (${tokensPerSec.value.format(1)} t/s)")
+                Timber.v("Token $tokenCount: '$token' (${_tokensPerSecond.value.format(1)} t/s)")
             }
 
             // Generation complete

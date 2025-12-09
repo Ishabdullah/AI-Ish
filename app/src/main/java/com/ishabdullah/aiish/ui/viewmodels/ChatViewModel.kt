@@ -128,6 +128,7 @@ class ChatViewModel : ViewModel() {
             when (msg.role) {
                 MessageRole.USER -> "User: ${msg.content}"
                 MessageRole.ASSISTANT -> "Assistant: ${msg.content}"
+                MessageRole.SYSTEM -> "System: ${msg.content}"
             }
         }
 
