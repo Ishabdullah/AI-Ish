@@ -35,6 +35,7 @@ find_library(android-lib android)
 set(SOURCES
     llm_bridge.cpp
     gpu_backend.cpp
+    whisper_bridge.cpp
 )
 
 # Create shared library

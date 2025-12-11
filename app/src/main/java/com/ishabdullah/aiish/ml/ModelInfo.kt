@@ -23,7 +23,8 @@ data class ModelInfo(
 enum class ModelType {
     INSTANT,
     DEEP,
-    VISION
+    VISION,
+    AUDIO
 }
 
 object ModelCatalog {
@@ -71,5 +72,27 @@ object ModelCatalog {
         type = ModelType.VISION
     )
 
-    fun getAll() = listOf(PHI4_MINI, QWEN2_7B, MOONDREAM2, QWEN2_VL)
+    val WHISPER_TINY = ModelInfo(
+        id = "whisper_tiny",
+        name = "Speech Recognition (Fast)",
+        description = "Whisper-Tiny int8 • 5-10x realtime on mobile",
+        sizeMB = 145,
+        downloadUrl = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
+        sha256 = "placeholder_sha256_whisper_tiny",
+        filename = "whisper-tiny-int8.bin",
+        type = ModelType.AUDIO
+    )
+
+    val WHISPER_BASE = ModelInfo(
+        id = "whisper_base",
+        name = "Speech Recognition (Accurate)",
+        description = "Whisper-Base int8 • Better accuracy, 3-5x realtime",
+        sizeMB = 290,
+        downloadUrl = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
+        sha256 = "placeholder_sha256_whisper_base",
+        filename = "whisper-base-int8.bin",
+        type = ModelType.AUDIO
+    )
+
+    fun getAll() = listOf(PHI4_MINI, QWEN2_7B, MOONDREAM2, QWEN2_VL, WHISPER_TINY, WHISPER_BASE)
 }
