@@ -67,14 +67,14 @@ jobs:
         with:
           name: ai-ish-debug-${{ steps.apk_info.outputs.commit_short }}
           path: app/build/outputs/apk/debug/*.apk
-          retention-days: 30
+          retention-days: 7
 
       - name: 📤 Upload Release APK (Production)
         uses: actions/upload-artifact@v4
         with:
           name: ai-ish-production-${{ steps.apk_info.outputs.commit_short }}
           path: app/build/outputs/apk/release/*.apk
-          retention-days: 90
+          retention-days: 30
 
       - name: 📋 Build Summary
         run: |
