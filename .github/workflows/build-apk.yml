@@ -29,7 +29,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: 📦 Cache Gradle packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -63,14 +63,14 @@ jobs:
           echo "🚀 Release APK: $RELEASE_SIZE"
 
       - name: 📤 Upload Debug APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ai-ish-debug-${{ steps.apk_info.outputs.commit_short }}
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
 
       - name: 📤 Upload Release APK (Production)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ai-ish-production-${{ steps.apk_info.outputs.commit_short }}
           path: app/build/outputs/apk/release/*.apk
@@ -112,7 +112,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download Release APK
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: 🎉 Create Release
         uses: softprops/action-gh-release@v1
