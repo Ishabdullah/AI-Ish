@@ -60,5 +60,16 @@ object ModelCatalog {
         type = ModelType.VISION
     )
 
-    fun getAll() = listOf(PHI4_MINI, QWEN2_7B, MOONDREAM2)
+    val QWEN2_VL = ModelInfo(
+        id = "qwen2_vl_2b",
+        name = "Advanced Vision Mode",
+        description = "Qwen2-VL-2B Q4 • Superior multimodal understanding",
+        sizeMB = 3700,
+        downloadUrl = "https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct-GGUF/resolve/main/qwen2-vl-2b-instruct-q4_k_m.gguf",
+        sha256 = "placeholder_sha256_qwen2_vl",
+        filename = "qwen2-vl-2b-q4.gguf",
+        type = ModelType.VISION
+    )
+
+    fun getAll() = listOf(PHI4_MINI, QWEN2_7B, MOONDREAM2, QWEN2_VL)
 }

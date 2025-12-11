@@ -225,4 +225,115 @@ Java_com_ishabdullah_aiish_ml_LLMInferenceEngine_nativeGetVocabSize(
     return 32000; // Placeholder
 }
 
+//=============================================================================
+// VISION MODEL METHODS
+//=============================================================================
+
+/**
+ * Load vision model
+ */
+JNIEXPORT jboolean JNICALL
+Java_com_ishabdullah_aiish_vision_VisionInferenceEngine_nativeLoadVisionModel(
+        JNIEnv* env,
+        jobject /* this */,
+        jstring model_path,
+        jint context_size,
+        jint gpu_layers) {
+
+    const char* path = env->GetStringUTFChars(model_path, nullptr);
+    LOGI("Loading vision model: %s (ctx=%d, gpu=%d)", path, context_size, gpu_layers);
+
+    // TODO: Integrate actual llama.cpp vision model loading
+    // Vision models use same llama.cpp API but with image encoder support
+    // bool success = llama_load_model(path, context_size, gpu_layers);
+
+    env->ReleaseStringUTFChars(model_path, path);
+
+    // Placeholder: Simulate successful load
+    return JNI_TRUE;
+}
+
+/**
+ * Encode image to embeddings
+ */
+JNIEXPORT jlongArray JNICALL
+Java_com_ishabdullah_aiish_vision_VisionInferenceEngine_nativeEncodeImage(
+        JNIEnv* env,
+        jobject /* this */,
+        jfloatArray image_data) {
+
+    jsize data_length = env->GetArrayLength(image_data);
+    LOGI("Encoding image: %d floats", data_length);
+
+    // TODO: Integrate actual image encoding
+    // 1. Get image data from Java float array
+    // 2. Run through vision encoder (part of vision model)
+    // 3. Return embeddings as long array (token IDs or embedding pointers)
+    //
+    // jfloat* image_floats = env->GetFloatArrayElements(image_data, nullptr);
+    // long* embeddings = vision_encode(image_floats, data_length);
+    // env->ReleaseFloatArrayElements(image_data, image_floats, 0);
+
+    // Placeholder: Return dummy embeddings
+    jlong dummy_embeddings[256];
+    for (int i = 0; i < 256; i++) {
+        dummy_embeddings[i] = i;
+    }
+
+    jlongArray result = env->NewLongArray(256);
+    env->SetLongArrayRegion(result, 0, 256, dummy_embeddings);
+    return result;
+}
+
+/**
+ * Generate text from image embeddings + prompt
+ */
+JNIEXPORT jstring JNICALL
+Java_com_ishabdullah_aiish_vision_VisionInferenceEngine_nativeGenerateFromImage(
+        JNIEnv* env,
+        jobject /* this */,
+        jlongArray image_embeddings,
+        jstring prompt,
+        jint max_tokens,
+        jfloat temperature) {
+
+    const char* prompt_str = env->GetStringUTFChars(prompt, nullptr);
+    jsize embedding_count = env->GetArrayLength(image_embeddings);
+
+    LOGI("Generating from image: embeddings=%d, prompt='%s', max=%d, temp=%.2f",
+         embedding_count, prompt_str, max_tokens, temperature);
+
+    // TODO: Integrate actual generation
+    // 1. Get image embeddings
+    // 2. Tokenize prompt
+    // 3. Concatenate image embeddings + prompt tokens
+    // 4. Run through text decoder
+    // 5. Return generated text
+    //
+    // jlong* embeddings = env->GetLongArrayElements(image_embeddings, nullptr);
+    // std::string result = vision_generate(embeddings, embedding_count, prompt_str, max_tokens, temperature);
+    // env->ReleaseLongArrayElements(image_embeddings, embeddings, 0);
+
+    env->ReleaseStringUTFChars(prompt, prompt_str);
+
+    // Placeholder response
+    return env->NewStringUTF("I can see an image. The vision model will provide detailed descriptions once llama.cpp integration is complete.");
+}
+
+/**
+ * Release vision model
+ */
+JNIEXPORT void JNICALL
+Java_com_ishabdullah_aiish_vision_VisionInferenceEngine_nativeReleaseVisionModel(
+        JNIEnv* env,
+        jobject /* this */) {
+
+    LOGI("Releasing vision model");
+
+    // TODO: Integrate actual cleanup
+    // vision_model_cleanup();
+
+    LOGI("Vision model released");
+}
+
 } // extern "C"
