@@ -1,7 +1,9 @@
 package com.ishabdullah.aiish.ui.viewmodels
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ishabdullah.aiish.audio.TTSManager
 import com.ishabdullah.aiish.domain.models.Message
 import com.ishabdullah.aiish.domain.models.MessageRole
 import com.ishabdullah.aiish.ml.LLMInferenceEngine
@@ -13,9 +15,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * Chat ViewModel - Manages chat conversation state with real LLM inference
+ * Chat ViewModel - Manages chat conversation state with real LLM inference and TTS
  */
-class ChatViewModel : ViewModel() {
+class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
@@ -30,12 +32,27 @@ class ChatViewModel : ViewModel() {
     private val llmEngine = LLMInferenceEngine()
     private val streamHandler = TokenStreamHandler()
 
+    // TTS component
+    private val ttsManager = TTSManager(application)
+    private val _ttsEnabled = MutableStateFlow(false)
+    val ttsEnabled: StateFlow<Boolean> = _ttsEnabled.asStateFlow()
+
     // Streaming state
     private val _streamingMessage = MutableStateFlow<String?>(null)
     val streamingMessage: StateFlow<String?> = _streamingMessage.asStateFlow()
 
     init {
         Timber.d("ChatViewModel initialized")
+
+        // Initialize TTS
+        viewModelScope.launch {
+            val success = ttsManager.initialize()
+            if (success) {
+                Timber.i("TTS initialized successfully")
+            } else {
+                Timber.w("TTS initialization failed")
+            }
+        }
     }
 
     /**
@@ -74,6 +91,11 @@ class ChatViewModel : ViewModel() {
                 )
                 _messages.value = _messages.value + assistantMessage
 
+                // Speak response if TTS is enabled
+                if (_ttsEnabled.value && aiResponse.isNotBlank()) {
+                    speakResponse(aiResponse)
+                }
+
             } catch (e: Exception) {
                 Timber.e(e, "Error sending message")
                 val errorMessage = Message(
@@ -81,6 +103,11 @@ class ChatViewModel : ViewModel() {
                     role = MessageRole.ASSISTANT
                 )
                 _messages.value = _messages.value + errorMessage
+
+                // Speak error if TTS is enabled
+                if (_ttsEnabled.value) {
+                    speakResponse(errorMessage.content)
+                }
             } finally {
                 _isLoading.value = false
                 _streamingMessage.value = null
@@ -202,5 +229,84 @@ Assistant:"""
 
     fun clearMessages() {
         _messages.value = emptyList()
+    }
+
+    // =========================================================================
+    // TTS Methods
+    // =========================================================================
+
+    /**
+     * Speak assistant response using TTS
+     */
+    private fun speakResponse(text: String) {
+        viewModelScope.launch {
+            try {
+                ttsManager.speak(text)
+            } catch (e: Exception) {
+                Timber.e(e, "Error speaking response")
+            }
+        }
+    }
+
+    /**
+     * Enable TTS
+     */
+    fun enableTTS() {
+        _ttsEnabled.value = true
+        Timber.i("TTS enabled")
+    }
+
+    /**
+     * Disable TTS
+     */
+    fun disableTTS() {
+        _ttsEnabled.value = false
+        ttsManager.stop()
+        Timber.i("TTS disabled")
+    }
+
+    /**
+     * Toggle TTS on/off
+     */
+    fun toggleTTS() {
+        if (_ttsEnabled.value) {
+            disableTTS()
+        } else {
+            enableTTS()
+        }
+    }
+
+    /**
+     * Stop current TTS playback
+     */
+    fun stopTTS() {
+        ttsManager.stop()
+    }
+
+    /**
+     * Set TTS speech rate
+     */
+    fun setTTSSpeechRate(rate: Float) {
+        ttsManager.setSpeechRate(rate)
+    }
+
+    /**
+     * Set TTS pitch
+     */
+    fun setTTSPitch(pitch: Float) {
+        ttsManager.setPitch(pitch)
+    }
+
+    /**
+     * Get TTS speaking state
+     */
+    fun isTTSSpeaking(): Boolean {
+        return ttsManager.isSpeaking.value
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        ttsManager.release()
+        llmEngine.release()
     }
 }
