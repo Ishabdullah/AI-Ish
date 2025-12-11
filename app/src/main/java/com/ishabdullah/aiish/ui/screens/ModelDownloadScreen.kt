@@ -89,17 +89,17 @@ fun ModelDownloadScreen(
                 )
             } else {
                 ModelSelectionCard(
-                    modelInfo = ModelCatalog.PHI4_MINI,
-                    isSelected = state.selectedModel?.id == ModelCatalog.PHI4_MINI.id,
-                    onSelect = { viewModel.selectModel(ModelCatalog.PHI4_MINI) }
+                    modelInfo = ModelCatalog.MISTRAL_7B_INT8,
+                    isSelected = state.selectedModel?.id == ModelCatalog.MISTRAL_7B_INT8.id,
+                    onSelect = { viewModel.selectModel(ModelCatalog.MISTRAL_7B_INT8) }
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 ModelSelectionCard(
-                    modelInfo = ModelCatalog.QWEN2_7B,
-                    isSelected = state.selectedModel?.id == ModelCatalog.QWEN2_7B.id,
-                    onSelect = { viewModel.selectModel(ModelCatalog.QWEN2_7B) }
+                    modelInfo = ModelCatalog.MOBILENET_V3_INT8,
+                    isSelected = state.selectedModel?.id == ModelCatalog.MOBILENET_V3_INT8.id,
+                    onSelect = { viewModel.selectModel(ModelCatalog.MOBILENET_V3_INT8) }
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -201,9 +201,10 @@ fun ModelSelectionCard(
         ) {
             Icon(
                 imageVector = when (modelInfo.type) {
-                    ModelType.INSTANT -> Icons.Default.Bolt
-                    ModelType.DEEP -> Icons.Default.Psychology
-                    else -> Icons.Default.Visibility
+                    ModelType.LLM -> Icons.Default.Psychology
+                    ModelType.VISION -> Icons.Default.Visibility
+                    ModelType.EMBEDDING -> Icons.Default.Bolt
+                    ModelType.AUDIO -> Icons.Default.Mic
                 },
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),

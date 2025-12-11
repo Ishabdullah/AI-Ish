@@ -166,7 +166,7 @@ class EmbeddingManager {
                 async {
                     nativeGenerateEmbeddingsBatch(batch.toTypedArray())
                 }
-            }.awaitAll().flatten()
+            }.awaitAll().flatMap { it.toList() }
 
             val processingTime = System.currentTimeMillis() - startTime
             val throughput = (texts.size.toFloat() / processingTime) * 1000  // embeddings/sec
