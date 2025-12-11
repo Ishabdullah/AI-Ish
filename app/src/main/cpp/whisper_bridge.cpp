@@ -7,6 +7,56 @@
  * Contact: ismail.t.abdullah@gmail.com
  */
 
+/*
+ * ================================================================================================
+ * JNI STUB IMPLEMENTATION - WHISPER.CPP INTEGRATION PENDING
+ * ================================================================================================
+ *
+ * IMPORTANT: This file contains JNI stub implementations for Speech-to-Text (STT) using Whisper.
+ * These are PLACEHOLDER functions that allow the project to compile and run, but DO NOT provide
+ * actual speech recognition functionality. All return values are mocked for compilation purposes only.
+ *
+ * REQUIRED INTEGRATION:
+ * ---------------------
+ * This file requires integration with whisper.cpp library to provide actual STT:
+ *
+ * 1. Add whisper.cpp to CMakeLists.txt:
+ *    - Clone whisper.cpp repository (https://github.com/ggerganov/whisper.cpp)
+ *    - Add as subdirectory or vendor the source
+ *    - Link against whisper library
+ *
+ * 2. Include actual whisper.cpp headers:
+ *    #include "whisper.h"
+ *
+ * 3. Replace all TODO sections with actual whisper.cpp API calls
+ *
+ * 4. Configure build for:
+ *    - ARM NEON optimizations (enabled by default on ARM64)
+ *    - CoreML support (iOS/macOS) or NNAPI support (Android) for NPU acceleration
+ *    - INT8 quantization for faster inference on mobile
+ *
+ * CURRENT RETURN VALUES:
+ * ----------------------
+ * - nativeLoadWhisperModel: Returns true (success) but doesn't load anything
+ * - nativeTranscribe: Returns placeholder text describing what will happen when integrated
+ * - nativeTranscribeStreaming: Returns empty string (streaming not implemented)
+ * - nativeGetLanguage: Returns "en" or whatever was set during load (hardcoded, not detected)
+ * - nativeReleaseWhisperModel: Does nothing
+ *
+ * These stubs allow the Kotlin layer to function and audio UI to be tested without crashing,
+ * but will not produce actual transcriptions until whisper.cpp is integrated.
+ *
+ * WHISPER MODELS:
+ * ---------------
+ * The ModelCatalog defines two Whisper models:
+ * - WHISPER_TINY: 145MB, 5-10x realtime on mobile (faster but less accurate)
+ * - WHISPER_BASE: 290MB, 3-5x realtime on mobile (better accuracy)
+ *
+ * Both use INT8 quantization for optimal mobile performance.
+ *
+ * ================================================================================================
+ */
+
 #include <jni.h>
 #include <string>
 #include <android/log.h>
@@ -21,6 +71,7 @@
 
 // TODO: Integrate whisper.cpp
 // Global state for Whisper model
+// TODO: Uncomment when whisper.cpp is integrated:
 // static whisper_context* g_whisper_ctx = nullptr;
 // static whisper_params g_whisper_params;
 static std::string g_detected_language = "en";

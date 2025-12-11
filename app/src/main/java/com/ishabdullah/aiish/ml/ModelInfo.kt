@@ -9,6 +9,35 @@
 
 package com.ishabdullah.aiish.ml
 
+/**
+ * Model metadata and download information
+ *
+ * SHA256 CHECKSUM DOCUMENTATION:
+ * ===============================
+ * All SHA256 checksums marked as "placeholder_sha256_*" must be replaced with actual checksums
+ * calculated from the downloaded model files. This ensures file integrity and prevents corrupted
+ * or tampered models from being loaded.
+ *
+ * HOW TO CALCULATE SHA256 CHECKSUMS:
+ * ----------------------------------
+ * 1. Download the model file manually from the URL specified in downloadUrl
+ * 2. Run the following command in your terminal:
+ *
+ *    sha256sum filename.gguf
+ *
+ *    (On macOS, use: shasum -a 256 filename.gguf)
+ *
+ * 3. Copy the 64-character hexadecimal hash output
+ * 4. Replace the corresponding "placeholder_sha256_*" value with the actual hash
+ *
+ * EXAMPLE:
+ * --------
+ * $ sha256sum mistral-7b-instruct-v0.2.Q8_0.gguf
+ * a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456  mistral-7b-instruct-v0.2.Q8_0.gguf
+ *
+ * Then update:
+ * sha256 = "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
+ */
 data class ModelInfo(
     val id: String,
     val name: String,
@@ -45,6 +74,7 @@ object ModelCatalog {
         description = "Mistral-7B-Instruct INT8 • NPU-optimized • 25-35 t/s",
         sizeMB = 3500,
         downloadUrl = "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q8_0.gguf",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum mistral-7b-instruct-v0.2.Q8_0.gguf)
         sha256 = "placeholder_sha256_mistral_int8",
         filename = "mistral-7b-instruct-int8.gguf",
         type = ModelType.LLM
@@ -63,6 +93,7 @@ object ModelCatalog {
         description = "MobileNet-v3-Large INT8 • NPU-optimized • 60 FPS",
         sizeMB = 500,
         downloadUrl = "https://huggingface.co/google/mobilenet_v3_large_100_224/resolve/main/mobilenet_v3_large_100_224_int8.tflite",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum mobilenet_v3_large_100_224_int8.tflite)
         sha256 = "placeholder_sha256_mobilenet",
         filename = "mobilenet-v3-large-int8.tflite",
         type = ModelType.VISION
@@ -81,6 +112,7 @@ object ModelCatalog {
         description = "BGE-Small-EN INT8 • CPU-optimized • Fast embeddings",
         sizeMB = 300,
         downloadUrl = "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/main/model_int8.gguf",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum model_int8.gguf)
         sha256 = "placeholder_sha256_bge",
         filename = "bge-small-en-int8.gguf",
         type = ModelType.EMBEDDING
@@ -92,6 +124,7 @@ object ModelCatalog {
         description = "Moondream2 GGUF • Real-time vision analysis",
         sizeMB = 1900,
         downloadUrl = "https://huggingface.co/vikhyatk/moondream2/resolve/main/moondream2-text-model-f16.gguf",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum moondream2-text-model-f16.gguf)
         sha256 = "placeholder_sha256_moondream",
         filename = "moondream2-q4.gguf",
         type = ModelType.VISION
@@ -103,6 +136,7 @@ object ModelCatalog {
         description = "Qwen2-VL-2B Q4 • Superior multimodal understanding",
         sizeMB = 3700,
         downloadUrl = "https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct-GGUF/resolve/main/qwen2-vl-2b-instruct-q4_k_m.gguf",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum qwen2-vl-2b-instruct-q4_k_m.gguf)
         sha256 = "placeholder_sha256_qwen2_vl",
         filename = "qwen2-vl-2b-q4.gguf",
         type = ModelType.VISION
@@ -114,6 +148,7 @@ object ModelCatalog {
         description = "Whisper-Tiny int8 • 5-10x realtime on mobile",
         sizeMB = 145,
         downloadUrl = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum ggml-tiny.bin)
         sha256 = "placeholder_sha256_whisper_tiny",
         filename = "whisper-tiny-int8.bin",
         type = ModelType.AUDIO
@@ -125,6 +160,7 @@ object ModelCatalog {
         description = "Whisper-Base int8 • Better accuracy, 3-5x realtime",
         sizeMB = 290,
         downloadUrl = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum ggml-base.bin)
         sha256 = "placeholder_sha256_whisper_base",
         filename = "whisper-base-int8.bin",
         type = ModelType.AUDIO

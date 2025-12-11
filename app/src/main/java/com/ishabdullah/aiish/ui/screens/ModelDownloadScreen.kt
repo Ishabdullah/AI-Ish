@@ -82,67 +82,110 @@ fun ModelDownloadScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            if (state.isDownloading) {
-                DownloadProgressCard(
-                    progress = state.currentDownload,
+            if (state.downloadingAllModels) {
+                // Show multi-model download progress
+                AllModelsDownloadProgressCard(
+                    productionModels = ModelCatalog.getProductionModels(),
+                    completedModels = state.completedModels,
+                    totalProgress = state.totalDownloadProgress,
+                    currentDownload = state.currentDownload,
                     onCancel = { viewModel.cancelDownload() }
                 )
             } else {
-                ModelSelectionCard(
-                    modelInfo = ModelCatalog.MISTRAL_7B_INT8,
-                    isSelected = state.selectedModel?.id == ModelCatalog.MISTRAL_7B_INT8.id,
-                    onSelect = { viewModel.selectModel(ModelCatalog.MISTRAL_7B_INT8) }
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                ModelSelectionCard(
-                    modelInfo = ModelCatalog.MOBILENET_V3_INT8,
-                    isSelected = state.selectedModel?.id == ModelCatalog.MOBILENET_V3_INT8.id,
-                    onSelect = { viewModel.selectModel(ModelCatalog.MOBILENET_V3_INT8) }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
+                // Show production models list
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (state.includeVision)
-                            MaterialTheme.colorScheme.tertiaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(20.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Camera,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Include Vision Mode",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Medium
+                        Text(
+                            text = "Production Models Package",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Install all essential AI models optimized for your device:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // List of production models
+                        ModelCatalog.getProductionModels().forEach { model ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = when (model.type) {
+                                        ModelType.LLM -> Icons.Default.Psychology
+                                        ModelType.VISION -> Icons.Default.Visibility
+                                        ModelType.EMBEDDING -> Icons.Default.Bolt
+                                        ModelType.AUDIO -> Icons.Default.Mic
+                                    },
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
                                 )
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = model.name,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = model.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
                                 Text(
-                                    text = "${ModelCatalog.MOONDREAM2.sizeMB} MB • Optional",
+                                    text = "${model.sizeMB} MB",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-                        Switch(
-                            checked = state.includeVision,
-                            onCheckedChange = { viewModel.toggleVision(it) }
-                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Divider()
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Total Download Size:",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${ModelCatalog.getProductionModels().sumOf { it.sizeMB }} MB",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
 
@@ -158,17 +201,15 @@ fun ModelDownloadScreen(
                 }
 
                 Button(
-                    onClick = { viewModel.startDownload() },
+                    onClick = { viewModel.downloadAllProductionModels() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    enabled = state.selectedModel != null && !state.isDownloading
+                    enabled = !state.isDownloading
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    val totalSize = (state.selectedModel?.sizeMB ?: 0) +
-                            if (state.includeVision) ModelCatalog.MOONDREAM2.sizeMB else 0
-                    Text("Download ($totalSize MB)")
+                    Text("Install All Production Models")
                 }
             }
         }
@@ -176,70 +217,116 @@ fun ModelDownloadScreen(
 }
 
 @Composable
-fun ModelSelectionCard(
-    modelInfo: ModelInfo,
-    isSelected: Boolean,
-    onSelect: () -> Unit
+fun AllModelsDownloadProgressCard(
+    productionModels: List<ModelInfo>,
+    completedModels: Set<String>,
+    totalProgress: Int,
+    currentDownload: com.ishabdullah.aiish.ml.DownloadProgress?,
+    onCancel: () -> Unit
 ) {
     Card(
-        onClick = onSelect,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected)
-                MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surface
-        ),
-        border = if (isSelected)
-            CardDefaults.outlinedCardBorder().copy(width = 2.dp)
-        else null
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = when (modelInfo.type) {
-                    ModelType.LLM -> Icons.Default.Psychology
-                    ModelType.VISION -> Icons.Default.Visibility
-                    ModelType.EMBEDDING -> Icons.Default.Bolt
-                    ModelType.AUDIO -> Icons.Default.Mic
-                },
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = if (isSelected)
-                    MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant
+            Text(
+                text = "Installing Production Models",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            // Overall progress
+            CircularProgressIndicator(
+                progress = { totalProgress / 100f },
+                modifier = Modifier.size(100.dp),
+                strokeWidth = 10.dp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "$totalProgress% Complete",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            currentDownload?.let {
                 Text(
-                    text = modelInfo.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = modelInfo.description,
+                    text = "${String.format("%.1f", it.speedMBps)} MB/s",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = "${modelInfo.sizeMB} MB",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
             }
 
-            if (isSelected) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Selected",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Individual model progress
+            productionModels.forEach { model ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = if (model.id in completedModels)
+                            Icons.Default.CheckCircle
+                        else Icons.Default.Circle,
+                        contentDescription = null,
+                        tint = if (model.id in completedModels)
+                            MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                        modifier = Modifier.size(20.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = model.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (model.id in completedModels)
+                                FontWeight.Bold
+                            else FontWeight.Normal,
+                            color = if (model.id in completedModels)
+                                MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Text(
+                        text = "${model.sizeMB} MB",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LinearProgressIndicator(
+                progress = { totalProgress / 100f },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Close, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Cancel Download")
             }
         }
     }

@@ -7,6 +7,54 @@
  * Contact: ismail.t.abdullah@gmail.com
  */
 
+/*
+ * ================================================================================================
+ * JNI STUB IMPLEMENTATION - OPENCL INTEGRATION PENDING
+ * ================================================================================================
+ *
+ * IMPORTANT: This file contains JNI stub implementations for GPU/OpenCL detection and management.
+ * These are PLACEHOLDER functions that allow the project to compile and run, but DO NOT provide
+ * actual GPU acceleration. All return values are mocked for compilation purposes only.
+ *
+ * REQUIRED INTEGRATION:
+ * ---------------------
+ * This file requires integration with OpenCL to provide actual GPU acceleration:
+ *
+ * 1. Add OpenCL headers and libraries:
+ *    - Vendor OpenCL headers (CL/cl.h, CL/cl_platform.h, etc.)
+ *    - Link against libOpenCL.so (available on Qualcomm Snapdragon devices)
+ *    - Or use vendor-provided OpenCL implementation
+ *
+ * 2. Include actual OpenCL headers:
+ *    #include <CL/cl.h>
+ *
+ * 3. Replace all TODO sections with actual OpenCL API calls
+ *
+ * 4. Configure for Adreno GPU:
+ *    - Detect Adreno 750 (S24 Ultra) or appropriate GPU
+ *    - Set up work groups optimized for Adreno architecture
+ *    - Use fp16 precision where appropriate for performance
+ *
+ * CURRENT RETURN VALUES:
+ * ----------------------
+ * - nativeIsGPUAvailable: Returns true on ARM64, false otherwise (no actual detection)
+ * - nativeGetGPUVendor: Returns "Qualcomm" (hardcoded, not from device)
+ * - nativeGetGPURenderer: Returns "Adreno (TM) 750" (hardcoded, not from device)
+ * - nativeGetGPUVersion: Returns "OpenCL 3.0" (hardcoded, not from device)
+ * - nativeGetComputeUnits: Returns 12 (typical for Adreno 750, not from actual query)
+ * - nativeSupportsOpenCL: Returns true on ARM64, false otherwise (no actual detection)
+ * - nativeInitOpenCL: Returns 0 (success) but doesn't initialize anything
+ * - nativeCleanupOpenCL: Does nothing
+ *
+ * These stubs allow the Kotlin layer to function and display GPU info in UI without crashing,
+ * but will not provide GPU acceleration for inference until OpenCL is integrated.
+ *
+ * NOTE: GPU acceleration is essential for optimal performance. Without OpenCL integration,
+ * all inference will run on CPU, which will be significantly slower.
+ *
+ * ================================================================================================
+ */
+
 #include <jni.h>
 #include <android/log.h>
 #include <string>
@@ -16,7 +64,7 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-// OpenCL headers will be included once OpenCL is vendored
+// TODO: Include actual OpenCL headers when vendored
 // #include <CL/cl.h>
 
 // GPU detection and initialization

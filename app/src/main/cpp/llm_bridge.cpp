@@ -7,6 +7,50 @@
  * Contact: ismail.t.abdullah@gmail.com
  */
 
+/*
+ * ================================================================================================
+ * JNI STUB IMPLEMENTATION - LLAMA.CPP INTEGRATION PENDING
+ * ================================================================================================
+ *
+ * IMPORTANT: This file contains JNI stub implementations for LLM inference.
+ * These are PLACEHOLDER functions that allow the project to compile and run, but DO NOT provide
+ * actual LLM functionality. All return values are mocked for compilation purposes only.
+ *
+ * REQUIRED INTEGRATION:
+ * ---------------------
+ * This file requires integration with llama.cpp library to provide actual LLM inference:
+ *
+ * 1. Add llama.cpp to CMakeLists.txt:
+ *    - Clone llama.cpp repository
+ *    - Add as subdirectory or vendor the source
+ *    - Link against llama library
+ *
+ * 2. Include actual llama.cpp headers:
+ *    #include "llama.h"
+ *
+ * 3. Replace all TODO sections with actual llama.cpp API calls
+ *
+ * 4. Configure build for:
+ *    - ARM NEON optimizations (enabled by default on ARM64)
+ *    - Hexagon NPU support (requires Qualcomm Hexagon SDK)
+ *    - OpenCL GPU support (requires OpenCL headers and libraries)
+ *
+ * CURRENT RETURN VALUES:
+ * ----------------------
+ * - nativeLoadModel: Always returns 0 (success) but doesn't load anything
+ * - nativeInitContext: Always returns 0 (success) but doesn't initialize context
+ * - nativeTokenize: Returns 1 dummy token
+ * - nativeGenerate: Returns token ID 1 (dummy)
+ * - nativeDecode: Returns "..." placeholder text
+ * - nativeIsEOS: Returns true only for token 2
+ * - nativeGetVocabSize: Returns 32000 (typical for Llama models, but not from actual model)
+ *
+ * These stubs allow the Kotlin layer to function and UI to be tested without crashing,
+ * but will not produce meaningful LLM outputs until llama.cpp is integrated.
+ *
+ * ================================================================================================
+ */
+
 #include <jni.h>
 #include <android/log.h>
 #include <string>
@@ -20,7 +64,7 @@
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 // Forward declarations for llama.cpp integration
-// Note: This will be replaced with actual llama.cpp headers once integrated
+// TODO: Replace with actual llama.cpp headers: #include "llama.h"
 struct llama_context;
 struct llama_model;
 
