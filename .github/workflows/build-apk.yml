@@ -28,6 +28,15 @@ jobs:
       - name: 🔧 Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: 🔐 Create debug keystore for signing
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore \
+            -storepass android -alias androiddebugkey \
+            -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+          echo "✅ Debug keystore created for APK signing"
+
       - name: 📦 Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -137,10 +146,11 @@ jobs:
             - Memory: ~4.5GB total
             
             ### 📥 Installation
-            1. Download app-release-unsigned.apk
+            1. Download ai-ish-production-*.apk
             2. Install on Samsung S24 Ultra
-            3. Grant required permissions
-            4. Download production models from in-app dashboard
+            3. Allow installation from unknown sources if prompted
+            4. Grant required permissions
+            5. Download production models from in-app dashboard
             
             ### 🔒 Privacy
             - 100% on-device processing

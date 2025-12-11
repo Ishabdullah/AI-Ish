@@ -43,13 +43,32 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // Self-signed debug keystore for personal use
+            // Uses Android's default debug keystore
+            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            // Debug builds are auto-signed, include all features
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+        }
+
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Use debug keystore for signing release builds (personal use)
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
