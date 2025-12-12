@@ -41,9 +41,10 @@ See [EXECUTIVE_REVIEW.md](EXECUTIVE_REVIEW.md) for detailed technical assessment
 
 AI Ish has been upgraded with the latest native AI inference engines and modern API integrations:
 
-#### ✅ Whisper.cpp API Modernization
-- **Updated to v1.7.6** - Stable release with full compatibility
-- **New Parameter API** - Migrated from flat structure to nested `greedy.best_of` and `beam_search.beam_size`
+#### ✅ Whisper.cpp API Modernization (v1.7.6)
+- **Updated to v1.7.6** - Latest stable release with full compatibility
+- **API field updates** - Updated to `suppress_nst` (abbreviated from `suppress_non_speech_tokens`)
+- **Nested parameters** - Using `greedy.best_of` and `beam_search.beam_size` structures
 - **Maintained compatibility** - All existing functionality preserved
 - **Performance optimized** - ARM NEON and mobile-specific tuning
 
@@ -51,37 +52,38 @@ AI Ish has been upgraded with the latest native AI inference engines and modern 
 - **Modern API** - Using `llama_model_default_params()` and `llama_context_default_params()`
 - **Sampler chain** - Proper initialization with `llama_sampler_chain_init()`
 - **Tokenizer updates** - Using vocab-based API for better compatibility
-- **Removed deprecated** - Cleaned up `flash_attn`, `use_mmap` flags, tensor-split logic
+- **Cleaned codebase** - Removed deprecated flags and legacy code
 
-#### ✅ Full NPU Support (Qualcomm QNN/NNAPI)
-- **Removed Hexagon SDK references** - Migrated to modern QNN delegate
-- **NNAPI Integration** - Using Android's Neural Networks API
-- **Device capability detection** - Automatic NPU availability checking
-- **Fused kernel support** - Optimized MatMul+Add+ReLU operations
+#### ✅ NPU Support (Qualcomm QNN/NNAPI) - Ready for Integration
+- **Removed Hexagon SDK references** - Migrated to modern QNN delegate terminology
+- **NNAPI Ready** - JNI stubs prepared for Android's Neural Networks API
+- **Device capability detection** - Automatic NPU availability checking implemented
+- **Future integration** - Requires QNN SDK for full functionality
 
-#### ✅ GPU Acceleration (Vulkan Backend)
-- **Vulkan enabled** - GGML_VULKAN=ON for llama.cpp and whisper.cpp
-- **TFLite GPU delegate** - Ready for TfLiteGpuDelegateOptionsV2
-- **Adreno 750 support** - Full Vulkan backend for Snapdragon 8 Gen 3
-- **Fallback logic** - Automatic GPU detection and graceful CPU fallback
+#### ⚠️ CPU-Only Build Configuration
+- **Current status** - CPU backend only (GGML_CPU=ON)
+- **Vulkan disabled** - Vulkan headers not available in Android NDK environment
+- **GPU support deferred** - Can be enabled later with proper header vendoring
+- **Performance** - Excellent CPU optimization with ARM NEON (armv8-a+fp+simd)
 
 #### ✅ CMake Build System
 - **Cleaned configuration** - Removed deprecated flags and unused backends
-- **Explicit backends** - GGML_CPU=ON, GGML_VULKAN=ON, disabled Metal/CUDA/SYCL
+- **CPU-optimized** - GGML_CPU=ON, all GPU backends disabled for portability
 - **NDK r25 compatible** - Full Android NDK 25.1.8937393 support
-- **Optimized compilation** - O3 optimization with ARM NEON enabled
+- **Production flags** - O3 optimization, NDEBUG, ARM NEON enabled
 
 #### ✅ Model Selection Logic
-- **Device-aware allocation** - NPU → GPU → CPU fallback chain
-- **Capability detection** - NeuralNetworks API for NPU, Vulkan check for GPU
+- **Device-aware allocation** - NPU (when integrated) → CPU fallback
+- **Capability detection** - NeuralNetworks API for NPU, CPU features detection
 - **Resource management** - Proper CPU core affinity and memory budgets
-- **Concurrent execution** - All three models (LLM + Vision + Embeddings) run in parallel
+- **Concurrent execution** - All three models (LLM + Vision + Embeddings) can run in parallel
 
 ### Build System Status
 - ✅ All native bridges compile without errors
-- ✅ Android CI/CD pipeline passes on GitHub Actions
+- ✅ Android CI/CD pipeline passes on GitHub Actions (commit: 42044ef)
 - ✅ NDK r25 full compatibility
-- ✅ Production-ready build configuration
+- ✅ Production-ready CPU-only build configuration
+- ⚠️ GPU acceleration pending (requires external headers)
 
 ---
 
@@ -103,12 +105,12 @@ AI Ish is optimized for the **Samsung Galaxy S24 Ultra** with Snapdragon 8 Gen 3
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ GPU (Adreno 750 with Vulkan)                                 │
-│ └─ Available for GGML acceleration (fallback/parallel)       │
+│ GPU (Adreno 750)                                              │
+│ └─ Reserved (GPU acceleration pending - requires headers)    │
 └──────────────────────────────────────────────────────────────┘
 
 Memory Budget: ~4.5GB (Mistral 3.5GB + MobileNet 500MB + BGE 300MB)
-Concurrent Execution: ✅ ALL 3 MODELS RUN SIMULTANEOUSLY
+Concurrent Execution: ✅ ALL 3 MODELS RUN SIMULTANEOUSLY (CPU-optimized)
 ```
 
 ---
@@ -302,7 +304,7 @@ cd AI-Ish
 │         ▼                  ▼                  ▼   HARDWARE LAYER   │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │
 │  │Qualcomm NPU  │  │Adreno 750 GPU│  │  ARM CPU     │            │
-│  │ (QNN/NNAPI)  │  │  (Vulkan)    │  │  (8 cores)   │            │
+│  │(QNN - Stubs) │  │  (Reserved)  │  │(NEON opt'd) │            │
 │  └──────────────┘  └──────────────┘  └──────────────┘            │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -334,23 +336,23 @@ AI Ish Production/
 │   ├── whisper_bridge.cpp  → JNI for whisper.cpp (STUB - pending integration)
 │   └── gpu_backend.cpp     → OpenCL management (STUB - pending integration)
 │
-└── Dependencies (Integrated & Updated)
-    ├── llama.cpp           → GGUF model inference (latest API)
-    ├── whisper.cpp         → Audio transcription (v1.7.6)
-    ├── QNN/NNAPI           → NPU acceleration (Qualcomm)
-    └── Vulkan              → GPU acceleration (GGML backend)
+└── Dependencies (Status)
+    ├── llama.cpp           → ✅ GGUF model inference (latest API, CPU-only)
+    ├── whisper.cpp         → ✅ Audio transcription (v1.7.6, CPU-only)
+    ├── QNN/NNAPI           → ⚠️ NPU acceleration (stubs ready, SDK pending)
+    └── GPU Backends        → ⚠️ Disabled (Vulkan/OpenCL headers needed)
 ```
 
 ### Device Resource Allocation
 
 | Component | Device | Cores | Optimization |
 |-----------|--------|-------|--------------|
-| **Mistral-7B Prefill** | NPU | - | Fused kernels, INT8 |
+| **Mistral-7B Prefill** | CPU | 0-7 | INT8, ARM NEON optimized |
 | **Mistral-7B Decode** | CPU | 0-3 | Streaming, preallocated buffers |
-| **MobileNet-v3** | NPU | - | Fused kernels, INT8 |
+| **MobileNet-v3** | CPU | 4-7 | INT8, ARM NEON optimized |
 | **BGE Embeddings** | CPU | 0-3 | Async, INT8/FP16 |
-| **Whisper STT** | CPU | 4-6 | INT8 |
-| **GPU (Adreno 750)** | GPU (Vulkan) | - | Available for GGML acceleration |
+| **Whisper STT** | CPU | 4-6 | INT8, ARM NEON optimized |
+| **GPU (Adreno 750)** | Reserved | - | Pending header integration |
 
 ### Tech Stack
 
@@ -358,21 +360,21 @@ AI Ish Production/
 - **UI Framework**: Jetpack Compose + Material 3
 - **Architecture**: MVVM + Clean Architecture
 - **Concurrency**: Kotlin Coroutines + Flow
-- **Native Layer**: JNI + CMake + llama.cpp
-- **Inference**: INT8 quantized models
-- **NPU Runtime**: Qualcomm QNN/NNAPI
+- **Native Layer**: JNI + CMake + llama.cpp + whisper.cpp
+- **Inference**: INT8 quantized models (CPU-only, ARM NEON)
+- **Hardware Acceleration**: CPU (ARM NEON), NPU/GPU pending
 - **Logging**: Timber
 
 ### Performance Benchmarks (S24 Ultra)
 
 | Task | Device | Performance | Notes |
 |------|--------|-------------|-------|
-| **LLM Prefill (512 tokens)** | NPU | 15-20ms | Fused kernels |
-| **LLM Decode (streaming)** | CPU | 25-35 t/s | Efficiency cores |
-| **Vision Inference** | NPU | ~60 FPS | Real-time classification |
-| **Embedding Generation** | CPU | ~500 emb/s | Batch processing |
-| **Speech-to-Text** | CPU | 5-10x realtime | Whisper-Tiny |
-| **Concurrent (All 3)** | NPU+CPU | ✅ No conflicts | Parallel execution |
+| **LLM Prefill (512 tokens)** | CPU | 50-100ms | ARM NEON optimized |
+| **LLM Decode (streaming)** | CPU | 15-25 t/s | INT8 quantization |
+| **Vision Inference** | CPU | ~15-30 FPS | ARM NEON optimized |
+| **Embedding Generation** | CPU | ~300 emb/s | Batch processing |
+| **Speech-to-Text** | CPU | 5-10x realtime | Whisper-Tiny INT8 |
+| **Concurrent (All 3)** | CPU | ✅ Possible | CPU core allocation |
 
 ---
 
