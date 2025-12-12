@@ -28,6 +28,38 @@ jobs:
       - name: 🔧 Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: 🧠 Clone llama.cpp and whisper.cpp for native AI
+        run: |
+          echo "🧠 Cloning llama.cpp for LLM inference..."
+          cd app/src/main/cpp
+
+          # Clone llama.cpp (lightweight depth=1 clone)
+          if [ -d "llama.cpp" ]; then
+            echo "⚠️ llama.cpp already exists, removing..."
+            rm -rf llama.cpp
+          fi
+          git clone --depth 1 https://github.com/ggerganov/llama.cpp.git
+          echo "✅ llama.cpp cloned ($(du -sh llama.cpp | cut -f1))"
+
+          # Clone whisper.cpp (lightweight depth=1 clone)
+          if [ -d "whisper.cpp" ]; then
+            echo "⚠️ whisper.cpp already exists, removing..."
+            rm -rf whisper.cpp
+          fi
+          echo "🎤 Cloning whisper.cpp for speech recognition..."
+          git clone --depth 1 https://github.com/ggerganov/whisper.cpp.git
+          echo "✅ whisper.cpp cloned ($(du -sh whisper.cpp | cut -f1))"
+
+          # Clean up .git directories to reduce size
+          rm -rf llama.cpp/.git whisper.cpp/.git
+          echo "🧹 Cleaned up .git directories"
+
+          cd ../../../..
+
+          echo ""
+          echo "✅ Native AI libraries ready!"
+          echo "📊 Total size: $(du -sh app/src/main/cpp/llama.cpp app/src/main/cpp/whisper.cpp | awk '{s+=$1} END {print s "M"}')"
+
       - name: 🔐 Create debug keystore for signing
         run: |
           mkdir -p ~/.android
