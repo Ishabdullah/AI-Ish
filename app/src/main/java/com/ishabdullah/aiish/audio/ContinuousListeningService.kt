@@ -88,7 +88,7 @@ class ContinuousListeningService : Service() {
 
         // Initialize components
         audioRecorder = AudioRecorder()
-        whisperSTT = WhisperSTT()
+        whisperSTT = WhisperSTT(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
