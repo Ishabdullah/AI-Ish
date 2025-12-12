@@ -76,13 +76,13 @@ static whisper_full_params get_default_params() {
     params.language = "en";
     params.detect_language = false;
 
-    // Suppression (API changed: suppress_non_speech_tokens -> suppress_nst)
+    // Suppression
     params.suppress_blank = true;
-    params.suppress_nst = true;
+    params.suppress_non_speech_tokens = true;
 
-    // Beam search (API changed: now nested in beam_search/greedy structs)
-    params.beam_search.beam_size = 1;
-    params.greedy.best_of = 1;
+    // Beam search (greedy for speed on mobile)
+    params.beam_size = 1;
+    params.best_of = 1;
 
     // Temperature fallback
     params.temperature_inc = 0.2f;
