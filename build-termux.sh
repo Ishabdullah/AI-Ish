@@ -98,7 +98,7 @@ mkdir -p "$GRADLE_USER_HOME"
 # Set Gradle daemon options for Termux (limited memory)
 cat > "$GRADLE_USER_HOME/gradle.properties" <<EOF
 org.gradle.daemon=true
-org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError
+org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError
 org.gradle.parallel=false
 android.useAndroidX=true
 android.enableJetifier=true
