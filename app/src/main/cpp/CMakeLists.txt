@@ -6,7 +6,7 @@
 # Contact: ismail.t.abdullah@gmail.com
 
 cmake_minimum_required(VERSION 3.22.1)
-project(aiish_native)
+project(aiish_native C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

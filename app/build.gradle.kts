@@ -16,6 +16,7 @@ plugins {
 android {
     namespace = "com.ishabdullah.aiish"
     compileSdk = 34
+    ndkVersion = "25.1.8937393"
 
     defaultConfig {
         applicationId = "com.ishabdullah.aiish"
