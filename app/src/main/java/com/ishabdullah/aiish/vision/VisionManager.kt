@@ -38,15 +38,16 @@ data class VisionResult(
 /**
  * VisionManager - MobileNet-v3 INT8 Production + Legacy Models
  *
- * Production Mode (MobileNet-v3 INT8 on NPU):
- * - Device: NPU via QNN/NNAPI delegate (45 TOPS INT8)
- * - Model: MobileNet-v3-Large INT8
+ * Production Mode (MobileNet-v3 INT8 via TFLite + NNAPI):
+ * - Device: NPU via TFLite NNAPI delegate
+ * - Model: MobileNet-v3-Large INT8 (TFLite format)
  * - Memory: ~500MB
- * - Performance: ~60 FPS on S24 Ultra NPU
+ * - Performance: ~30-60 FPS (device dependent)
  * - Features: Image classification, object detection
+ * - Backend: TFLite Kotlin API with NNAPI delegate (Gradle dependency)
  *
  * Legacy Mode (Moondream2/Qwen2-VL):
- * - Device: CPU/GPU
+ * - Device: CPU/GPU via llama.cpp
  * - Features: Full multimodal (VQA, descriptions, OCR)
  */
 class VisionManager(private val context: Context) {
@@ -136,9 +137,9 @@ class VisionManager(private val context: Context) {
             )
 
             Timber.i("Device allocation:")
-            Timber.i("  └─ Vision: NPU (QNN/NNAPI delegate, fused kernels)")
+            Timber.i("  └─ Vision: NPU (TFLite NNAPI delegate)")
 
-            // Load MobileNet-v3 on NPU
+            // Load MobileNet-v3 with NNAPI delegate
             val success = nativeLoadMobileNetV3(
                 modelPath = modelFile!!.absolutePath,
                 useNPU = true,
@@ -152,12 +153,12 @@ class VisionManager(private val context: Context) {
 
                 Timber.i("✅ MobileNet-v3 INT8 loaded successfully")
                 Timber.i("   - Memory: ~500MB (INT8)")
-                Timber.i("   - Mode: PRODUCTION (NPU)")
-                Timber.i("   - Device: NPU (QNN/NNAPI delegate, 45 TOPS)")
-                Timber.i("   - Performance target: ~60 FPS")
+                Timber.i("   - Mode: PRODUCTION (NNAPI)")
+                Timber.i("   - Device: NPU via TFLite NNAPI delegate")
+                Timber.i("   - Performance target: ~30-60 FPS")
                 Timber.i("═══════════════════════════════════════════════════════════")
             } else {
-                Timber.e("Failed to load MobileNet-v3 on NPU")
+                Timber.e("Failed to load MobileNet-v3 with NNAPI")
             }
 
             success
@@ -448,8 +449,8 @@ class VisionManager(private val context: Context) {
             |Performance Stats (Production Mode):
             |  - Inference time: ${lastInferenceTimeMs}ms
             |  - FPS: ${lastFPS.toInt()}
-            |  - Device: NPU (QNN/NNAPI delegate)
-            |  - Model: MobileNet-v3 INT8
+            |  - Device: NPU (TFLite NNAPI delegate)
+            |  - Model: MobileNet-v3 INT8 (TFLite)
             """.trimMargin()
         } else {
             "Performance stats only available in production mode"

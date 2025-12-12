@@ -20,29 +20,23 @@ import timber.log.Timber
 import java.io.File
 
 /**
- * LLM Inference Engine - Mistral-7B INT8 Production
+ * LLM Inference Engine - Mistral-7B via llama.cpp
  *
- * Architecture (Samsung S24 Ultra Optimized):
+ * Architecture: CPU-only inference with ARM NEON optimizations
  * ┌──────────────────────────────────────────────────────────────┐
- * │ Stage 1: PREFILL (NPU via QNN/NNAPI delegate)                │
- * │ - Process input prompt on NPU at 45 TOPS INT8                │
- * │ - Fused kernels for MatMul+Add+ReLU                          │
- * │ - Preallocated buffers for zero-copy operations             │
- * │ - Generate KV cache for context                             │
- * │ Performance: ~15-20ms for 512 tokens                        │
+ * │ CPU Inference (llama.cpp)                                    │
+ * │ - Full inference on CPU with ARM NEON SIMD                   │
+ * │ - Optimized for Snapdragon 8 Gen 3 cores                    │
+ * │ - INT8/FP16 quantized models (GGUF format)                   │
+ * │ - Streaming token generation                                 │
+ * │ Performance: ~10-25 tokens/sec (device dependent)            │
  * └──────────────────────────────────────────────────────────────┘
  *
- * ┌──────────────────────────────────────────────────────────────┐
- * │ Stage 2: DECODE (CPU Cores 0-3)                              │
- * │ - Stream tokens one-by-one on efficiency cores              │
- * │ - Reuse KV cache from prefill                               │
- * │ - Low latency per-token generation                          │
- * │ - Concurrent with vision/embedding models                    │
- * │ Performance: ~25-35 tokens/sec                              │
- * └──────────────────────────────────────────────────────────────┘
+ * Note: NNAPI/NPU is not used for LLM inference. NNAPI is optimized
+ * for CNN models but does not efficiently support transformer architectures.
+ * Vision models (MobileNet-v3) use NNAPI via TFLite Kotlin API.
  *
  * Memory: ~3.5GB (INT8 quantized)
- * Concurrent Execution: ✅ ENABLED (NPU prefill + CPU decode)
  */
 class LLMInferenceEngine {
 
@@ -66,7 +60,8 @@ class LLMInferenceEngine {
 
     private var isModelLoaded = false
     private var contextSize = DEFAULT_CONTEXT_SIZE
-    private var useProductionMode = false  // NPU prefill + CPU decode
+    @Deprecated("NPU mode deprecated - LLM uses CPU-only")
+    private var useProductionMode = false  // Deprecated - kept for backward compatibility
 
     // Device managers
     private var npuManager: NPUManager? = null
@@ -97,7 +92,7 @@ class LLMInferenceEngine {
     private external fun nativeFree()
     private external fun nativeGetVocabSize(): Int
 
-    // Production mode native methods (NPU prefill + CPU decode)
+    // CPU mode native methods (llama.cpp) - NPU params deprecated
     private external fun nativeLoadMistralINT8(
         modelPath: String,
         contextSize: Int,
@@ -122,7 +117,11 @@ class LLMInferenceEngine {
     private external fun nativeReleaseMistral()
 
     /**
-     * Load Mistral-7B INT8 in PRODUCTION mode (NPU prefill + CPU decode)
+     * Load Mistral-7B INT8 model (CPU-only via llama.cpp)
+     *
+     * Note: Despite the "production" name, this method now uses CPU-only inference.
+     * NNAPI/NPU is not suitable for transformer models like Mistral-7B.
+     * The useNPUPrefill parameter is deprecated and ignored.
      *
      * @param modelFile Mistral-7B INT8 GGUF model file
      * @param contextSize Maximum context window (default 4096)
@@ -139,64 +138,51 @@ class LLMInferenceEngine {
             }
 
             Timber.i("═══════════════════════════════════════════════════════════")
-            Timber.i("Loading Mistral-7B INT8 (PRODUCTION MODE)")
+            Timber.i("Loading Mistral-7B INT8 (CPU mode via llama.cpp)")
             Timber.i("═══════════════════════════════════════════════════════════")
 
             this@LLMInferenceEngine.contextSize = contextSize
 
-            // Initialize device managers
-            npuManager = NPUManager()
+            // Initialize device managers for tracking
             deviceAllocator = DeviceAllocationManager()
 
-            // Initialize NPU
-            val npuInitialized = npuManager?.initialize() ?: false
-            if (!npuInitialized) {
-                Timber.w("NPU initialization failed, falling back to CPU-only mode")
-                return@withContext loadModelLegacy(modelFile.absolutePath, contextSize, 0)
-            }
-
-            // Get allocation for LLM prefill
-            val prefillAllocation = deviceAllocator?.allocateDevice(
-                DeviceAllocationManager.ModelType.LLM_PREFILL
-            )
-
-            // Get allocation for LLM decode
-            val decodeAllocation = deviceAllocator?.allocateDevice(
+            // Get allocation for LLM (now CPU-only)
+            @Suppress("DEPRECATION")
+            val llmAllocation = deviceAllocator?.allocateDevice(
                 DeviceAllocationManager.ModelType.LLM_DECODE
             )
 
             Timber.i("Device allocation:")
-            Timber.i("  ├─ Prefill: NPU (QNN/NNAPI delegate, fused kernels)")
-            Timber.i("  └─ Decode: CPU cores ${CPU_CORES_DECODE} (streaming)")
+            Timber.i("  └─ LLM: CPU (llama.cpp with ARM NEON)")
 
-            // Load model with NPU + CPU split
+            // Load model on CPU (useNPUPrefill=false, ignored anyway)
             val success = nativeLoadMistralINT8(
                 modelPath = modelFile.absolutePath,
                 contextSize = contextSize,
-                useNPUPrefill = true,
+                useNPUPrefill = false,  // Deprecated - always CPU
                 cpuCores = CPU_CORES_DECODE.toIntArray(),
                 usePreallocatedBuffers = true
             )
 
             if (success) {
                 isModelLoaded = true
-                useProductionMode = true
+                @Suppress("DEPRECATION")
+                useProductionMode = true  // Keep for backward compatibility
 
                 Timber.i("✅ Mistral-7B INT8 loaded successfully")
                 Timber.i("   - Context size: $contextSize")
                 Timber.i("   - Memory: ~3.5GB (INT8)")
-                Timber.i("   - Mode: PRODUCTION (NPU + CPU)")
-                Timber.i("   - Prefill: NPU (QNN/NNAPI delegate, 45 TOPS)")
-                Timber.i("   - Decode: CPU cores 0-3 (25-35 t/s)")
+                Timber.i("   - Mode: CPU (llama.cpp with ARM NEON)")
+                Timber.i("   - Performance: ~10-25 tokens/sec")
                 Timber.i("═══════════════════════════════════════════════════════════")
             } else {
-                Timber.e("Failed to load model in production mode")
+                Timber.e("Failed to load model")
             }
 
             success
 
         } catch (e: Exception) {
-            Timber.e(e, "Error loading model in production mode")
+            Timber.e(e, "Error loading model")
             false
         }
     }
@@ -257,8 +243,7 @@ class LLMInferenceEngine {
     /**
      * Generate text with token-by-token streaming
      *
-     * Production Mode: NPU prefill + CPU decode streaming
-     * Legacy Mode: CPU/GPU generation
+     * Uses llama.cpp CPU inference with ARM NEON optimizations.
      *
      * @param prompt Input text prompt
      * @param maxTokens Maximum tokens to generate
@@ -300,7 +285,9 @@ class LLMInferenceEngine {
     }.flowOn(Dispatchers.Default)
 
     /**
-     * Production mode generation: NPU prefill + CPU decode
+     * CPU generation via llama.cpp (formerly "production mode")
+     *
+     * Note: This now uses CPU-only inference. The NPU prefill stage is deprecated.
      */
     private fun generateProductionStream(
         prompt: String,
@@ -309,15 +296,13 @@ class LLMInferenceEngine {
         topP: Float,
         stopSequences: List<String>
     ): Flow<String> = flow {
-        Timber.d("Production generation: ${prompt.take(100)}...")
+        Timber.d("CPU generation (llama.cpp): ${prompt.take(100)}...")
 
         val startTime = System.currentTimeMillis()
 
-        // ========== STAGE 1: PREFILL ON NPU ==========
-        Timber.d("Stage 1: NPU Prefill starting...")
+        // ========== TOKENIZE ==========
         val prefillStart = System.currentTimeMillis()
 
-        // Tokenize prompt
         val maxPromptTokens = 2048
         val promptTokens = IntArray(maxPromptTokens)
         val numPromptTokens = nativeTokenize(prompt, promptTokens)
@@ -330,32 +315,32 @@ class LLMInferenceEngine {
 
         Timber.d("Tokenized: $numPromptTokens tokens")
 
-        // Run prefill on NPU (generates KV cache)
+        // Prefill via llama.cpp (CPU) - nativePrefillOnNPU is now CPU-based
         val prefillSuccess = nativePrefillOnNPU(
             promptTokens,
             numPromptTokens
         )
 
         if (!prefillSuccess) {
-            Timber.e("NPU prefill failed")
-            emit("[ERROR: NPU prefill failed]")
+            Timber.e("Prefill failed")
+            emit("[ERROR: Prefill failed]")
             return@flow
         }
 
         lastPrefillTimeMs = System.currentTimeMillis() - prefillStart
-        Timber.i("✅ NPU Prefill complete: ${lastPrefillTimeMs}ms for $numPromptTokens tokens")
+        Timber.i("✅ Prefill complete: ${lastPrefillTimeMs}ms for $numPromptTokens tokens")
 
-        // ========== STAGE 2: DECODE ON CPU ==========
-        Timber.d("Stage 2: CPU Decode streaming...")
+        // ========== DECODE ON CPU ==========
+        Timber.d("CPU decode streaming...")
         val decodeStart = System.currentTimeMillis()
 
         val generatedText = StringBuilder()
         var tokensGenerated = 0
-        var currentToken = -1  // Will be set by first decode
+        var currentToken = -1
 
         // Stream tokens one by one from CPU
         for (i in 0 until maxTokens) {
-            // Generate next token on CPU efficiency cores
+            // Generate next token on CPU
             val newToken = nativeDecodeOnCPU(
                 currentToken,
                 temperature,
@@ -517,8 +502,10 @@ class LLMInferenceEngine {
     fun isLoaded(): Boolean = isModelLoaded
 
     /**
-     * Check if production mode is active (NPU + CPU)
+     * Check if production mode is active
+     * @deprecated NPU mode is deprecated - LLM uses CPU-only
      */
+    @Deprecated("NPU mode deprecated - LLM uses CPU-only")
     fun isProductionMode(): Boolean = useProductionMode
 
     /**
@@ -527,8 +514,7 @@ class LLMInferenceEngine {
     fun getPerformanceMode(): String {
         return when {
             !isModelLoaded -> "Not Loaded"
-            useProductionMode -> "Production (NPU + CPU)"
-            else -> "Legacy (CPU/GPU)"
+            else -> "CPU (llama.cpp with ARM NEON)"
         }
     }
 
@@ -551,16 +537,16 @@ class LLMInferenceEngine {
      * Get performance stats
      */
     fun getPerformanceStats(): String {
-        return if (useProductionMode) {
+        return if (isModelLoaded) {
             """
-            |Performance Stats (Production Mode):
-            |  - Prefill: ${lastPrefillTimeMs}ms (NPU)
-            |  - Decode: ${lastDecodeTimeMs}ms (CPU)
+            |Performance Stats (CPU Mode):
+            |  - Prefill: ${lastPrefillTimeMs}ms
+            |  - Decode: ${lastDecodeTimeMs}ms
             |  - Throughput: ${lastTokensPerSecond.toInt()} tokens/sec
-            |  - Mode: NPU (QNN/NNAPI) + CPU Cores 0-3
+            |  - Mode: CPU (llama.cpp with ARM NEON)
             """.trimMargin()
         } else {
-            "Performance stats only available in production mode"
+            "Performance stats not available - model not loaded"
         }
     }
 

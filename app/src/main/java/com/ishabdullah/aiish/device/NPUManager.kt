@@ -13,23 +13,24 @@ import timber.log.Timber
 import java.io.File
 
 /**
- * NPUManager - Qualcomm NPU interface via QNN/NNAPI delegates
+ * NPUManager - NPU interface via Android NNAPI delegate
  *
- * NPU Specifications (S24 Ultra):
- * - 45 TOPS INT8 performance via QNN/NNAPI
- * - Dedicated tensor accelerator
- * - Optimized for INT8 quantized models
- * - Supports fused kernels and preallocated buffers
+ * NPU Acceleration via NNAPI:
+ * - Android NNAPI provides hardware-agnostic NPU access
+ * - Supports Snapdragon (Hexagon), Exynos, Dimensity, and Tensor NPUs
+ * - Best suited for CNN models (MobileNet, EfficientNet, etc.)
+ * - TFLite models use NNAPI delegate for NPU acceleration
  *
  * Assigned Models:
- * 1. Mistral-7B INT8 (prefill only)
- * 2. MobileNet-v3 INT8 (full inference)
+ * 1. MobileNet-v3 INT8 (TFLite with NNAPI delegate) - Vision classification
  *
- * Optimization Techniques:
- * - Fused kernels: Combine ops (MatMul+Add+ReLU) into single kernel
- * - Preallocated buffers: Reuse memory across inferences
- * - INT8 quantization: 4x memory reduction + 4x speed increase
- * - Asynchronous execution: Overlap compute with memory transfers
+ * Note: LLM inference (Mistral-7B) uses CPU-only via llama.cpp with ARM NEON
+ * optimizations. NNAPI is not well-suited for transformer architectures.
+ *
+ * Architecture:
+ * - Vision: TFLite Kotlin API with NNAPI delegate (Gradle dependency)
+ * - LLM: llama.cpp native bridge (CPU with NEON)
+ * - Embeddings: llama.cpp native bridge (CPU with NEON)
  */
 class NPUManager {
 
@@ -44,14 +45,14 @@ class NPUManager {
         }
 
         // NPU configuration
-        private const val NPU_QNN_NNAPI = "qnn_nnapi"
+        private const val NPU_NNAPI = "nnapi"
         private const val BUFFER_POOL_SIZE = 10  // Preallocated buffer pool
     }
 
     private var isNPUAvailable = false
     private var isInitialized = false
 
-    // Native methods for NPU (QNN/NNAPI delegate)
+    // Native methods for NPU (NNAPI delegate)
     private external fun nativeDetectNPU(): Boolean
     private external fun nativeInitializeNPU(): Boolean
     private external fun nativeLoadModelToNPU(
@@ -77,7 +78,7 @@ class NPUManager {
             // Detect NPU
             isNPUAvailable = nativeDetectNPU()
             if (!isNPUAvailable) {
-                Timber.w("NPU (QNN/NNAPI delegate) not available on this device")
+                Timber.w("NPU (NNAPI delegate) not available on this device")
                 return false
             }
 
@@ -187,10 +188,13 @@ class NPUManager {
     }
 
     /**
-     * NPU model types
+     * NPU model types (NNAPI delegate)
+     *
+     * Note: Only vision models (CNNs) use NNAPI. LLM uses CPU via llama.cpp.
      */
     enum class NPUModelType {
-        LLM_PREFILL,    // Mistral-7B prefill stage
-        VISION          // MobileNet-v3 full inference
+        @Deprecated("LLM uses CPU-only via llama.cpp")
+        LLM_PREFILL,    // Deprecated - LLM uses CPU
+        VISION          // MobileNet-v3 with NNAPI delegate
     }
 }

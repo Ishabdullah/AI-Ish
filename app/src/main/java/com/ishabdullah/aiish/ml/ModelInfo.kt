@@ -63,15 +63,16 @@ object ModelCatalog {
 
     /**
      * Mistral-7B-Instruct INT8 - Primary LLM
-     * Device: NPU via QNN/NNAPI delegate (prefill) + CPU (decode)
+     * Device: CPU via llama.cpp with ARM NEON optimizations
      * Quantization: INT8 for minimal memory and max throughput
      * Memory: ~3.5GB
-     * Performance: ~25-35 tokens/sec on S24 Ultra
+     * Performance: ~10-25 tokens/sec (device dependent)
+     * Note: NNAPI is not used for LLM (not suited for transformers)
      */
     val MISTRAL_7B_INT8 = ModelInfo(
         id = "mistral_7b_int8",
         name = "Mistral-7B INT8 (Production)",
-        description = "Mistral-7B-Instruct INT8 • NPU-optimized • 25-35 t/s",
+        description = "Mistral-7B-Instruct INT8 • CPU-optimized • 10-25 t/s",
         sizeMB = 3500,
         downloadUrl = "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q8_0.gguf",
         // TODO: Replace with actual SHA256 after downloading model (run: sha256sum mistral-7b-instruct-v0.2.Q8_0.gguf)
@@ -82,15 +83,16 @@ object ModelCatalog {
 
     /**
      * MobileNet-v3 INT8 - Vision Model
-     * Device: NPU via QNN/NNAPI delegate
+     * Device: NPU via TFLite NNAPI delegate
+     * Format: TFLite (.tflite)
      * Quantization: INT8 for fast inference
      * Memory: ~500MB
-     * Performance: ~60 FPS on S24 Ultra NPU
+     * Performance: ~30-60 FPS (device dependent)
      */
     val MOBILENET_V3_INT8 = ModelInfo(
         id = "mobilenet_v3_int8",
         name = "MobileNet-v3 INT8 (Production)",
-        description = "MobileNet-v3-Large INT8 • NPU-optimized • 60 FPS",
+        description = "MobileNet-v3-Large INT8 • NNAPI-optimized • 30-60 FPS",
         sizeMB = 500,
         downloadUrl = "https://huggingface.co/google/mobilenet_v3_large_100_224/resolve/main/mobilenet_v3_large_100_224_int8.tflite",
         // TODO: Replace with actual SHA256 after downloading model (run: sha256sum mobilenet_v3_large_100_224_int8.tflite)

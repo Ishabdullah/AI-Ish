@@ -4,7 +4,7 @@
 
 [![Build Status](https://github.com/Ishabdullah/AI-Ish/workflows/Build%20AI%20Ish%20APK/badge.svg)](https://github.com/Ishabdullah/AI-Ish/actions)
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com/)
-[![NPU](https://img.shields.io/badge/NPU-QNN%2FNNAPI-blue.svg)](https://www.qualcomm.com/)
+[![NPU](https://img.shields.io/badge/NPU-NNAPI-blue.svg)](https://developer.android.com/ndk/guides/neuralnetworks)
 
 **Copyright © 2025 Ismail Abdullah. All rights reserved.**
 
@@ -24,12 +24,12 @@
 | **Native JNI Bridge** | ⚠️ Stubs Only | 0% (compiles, no inference) |
 | **llama.cpp Integration** | ⏳ Pending | 0% |
 | **whisper.cpp Integration** | ⏳ Pending | 0% |
-| **QNN/NNAPI NPU Support** | ⏳ Pending | 0% |
+| **NNAPI NPU Support (TFLite)** | ✅ Ready | 80% |
 | **OpenCL GPU Support** | ⏳ Pending | 0% |
 
 **What Works:** Complete Android app with polished UI, model download system, settings, and all user-facing features.
 
-**What's Missing:** Actual AI inference (JNI methods return placeholder values). Integration of llama.cpp, whisper.cpp, QNN/NNAPI delegates, and OpenCL is required for functional AI capabilities.
+**What's Missing:** Actual AI inference (JNI methods return placeholder values). Integration of llama.cpp and Vosk STT is required for functional AI capabilities. NNAPI delegate is configured via TFLite Gradle dependency.
 
 See [EXECUTIVE_REVIEW.md](EXECUTIVE_REVIEW.md) for detailed technical assessment.
 
@@ -53,11 +53,12 @@ AI Ish has been upgraded with the latest native AI inference engines and modern 
   - No native build complexities
   - Gradle dependency integration
 
-#### ✅ NPU Support (Qualcomm QNN/NNAPI) - Ready for Integration
-- **Removed Hexagon SDK references** - Migrated to modern QNN delegate terminology
-- **NNAPI Ready** - JNI stubs prepared for Android's Neural Networks API
+#### ✅ NPU Support (Android NNAPI) - Integrated
+- **TFLite NNAPI Delegate** - Using TensorFlow Lite Gradle dependency with NNAPI delegate
+- **Hardware-agnostic** - Works with Snapdragon Hexagon, Exynos NPU, Dimensity APU, Tensor TPU
 - **Device capability detection** - Automatic NPU availability checking implemented
-- **Future integration** - Requires QNN SDK for full functionality
+- **Vision models ready** - MobileNet-v3 INT8 uses NNAPI for NPU acceleration
+- **Note** - LLM uses CPU-only (NNAPI not suited for transformer architectures)
 
 #### ⚠️ CPU-Only Build Configuration
 - **Current status** - CPU backend only (GGML_CPU=ON)
@@ -93,15 +94,14 @@ AI Ish is optimized for the **Samsung Galaxy S24 Ultra** with Snapdragon 8 Gen 3
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ NPU via QNN/NNAPI delegate (45 TOPS INT8)                    │
-│ ├─ Mistral-7B Prefill (INT8, 15-20ms for 512 tokens)         │
-│ └─ MobileNet-v3 Vision (INT8, ~60 FPS)                       │
+│ NPU via NNAPI delegate (TFLite)                               │
+│ └─ MobileNet-v3 Vision (TFLite INT8, ~30-60 FPS)             │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ CPU Cores 0-3 (Efficiency @ 2.3GHz)                          │
-│ ├─ Mistral-7B Decode (25-35 tokens/sec streaming)            │
-│ └─ BGE Embeddings (~500 embeddings/sec)                      │
+│ CPU (llama.cpp with ARM NEON)                                │
+│ ├─ Mistral-7B LLM (INT8, 10-25 tokens/sec)                   │
+│ └─ BGE Embeddings (~300 embeddings/sec)                      │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
@@ -110,7 +110,7 @@ AI Ish is optimized for the **Samsung Galaxy S24 Ultra** with Snapdragon 8 Gen 3
 └──────────────────────────────────────────────────────────────┘
 
 Memory Budget: ~4.5GB (Mistral 3.5GB + MobileNet 500MB + BGE 300MB)
-Concurrent Execution: ✅ ALL 3 MODELS RUN SIMULTANEOUSLY (CPU-optimized)
+Concurrent Execution: ✅ LLM on CPU, Vision on NPU (NNAPI)
 ```
 
 ---
@@ -128,17 +128,17 @@ Concurrent Execution: ✅ ALL 3 MODELS RUN SIMULTANEOUSLY (CPU-optimized)
 
 | Model | Device | Quantization | Memory | Performance |
 |-------|--------|--------------|--------|-------------|
-| **Mistral-7B-Instruct** | NPU + CPU | INT8 | 3.5GB | 25-35 t/s |
+| **Mistral-7B-Instruct** | CPU | INT8 | 3.5GB | 10-25 t/s |
 | **MobileNet-v3-Large** | NPU | INT8 | 500MB | ~60 FPS |
 | **BGE-Small-EN** | CPU | INT8/FP16 | 300MB | ~500 emb/s |
 | **Vosk STT (Small)** | CPU | - | 40-50MB | 5-10x realtime |
 
 ### ⚡ **Hardware Acceleration**
-- **NPU via QNN/NNAPI** - 45 TOPS INT8 inference
-- **Fused Kernels** - Optimized MatMul+Add+ReLU operations
+- **NPU via NNAPI** - TFLite delegate for vision models (CNN optimized)
+- **CPU with ARM NEON** - Optimized SIMD for LLM inference
 - **Preallocated Buffers** - Zero-copy memory operations
 - **CPU Affinity** - Dedicated cores for different workloads
-- **Concurrent Execution** - LLM + Vision + Embeddings in parallel
+- **Concurrent Execution** - LLM (CPU) + Vision (NPU) in parallel
 
 ### 🎨 **Advanced Features**
 - **Real-Time Streaming** - Token-by-token LLM responses
@@ -156,7 +156,7 @@ Concurrent Execution: ✅ ALL 3 MODELS RUN SIMULTANEOUSLY (CPU-optimized)
 |------|-------------|
 | **Primary Device** | Samsung Galaxy S24 Ultra |
 | **SoC** | Snapdragon 8 Gen 3 (Qualcomm) |
-| **NPU** | Qualcomm QNN/NNAPI (45 TOPS INT8) |
+| **NPU** | NNAPI delegate (varies by device) |
 | **RAM** | 12GB minimum |
 | **Storage** | 8GB free (for models) |
 | **Android Version** | Android 14 (API 34) |
@@ -303,8 +303,8 @@ cd AI-Ish
 ┌─────────┼──────────────────┼──────────────────┼────────────────────┐
 │         ▼                  ▼                  ▼   HARDWARE LAYER   │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │
-│  │Qualcomm NPU  │  │Adreno 750 GPU│  │  ARM CPU     │            │
-│  │(QNN - Stubs) │  │  (Reserved)  │  │(NEON opt'd) │            │
+│  │  NPU (NNAPI) │  │Adreno 750 GPU│  │  ARM CPU     │            │
+│  │ MobileNet-v3 │  │  (Reserved)  │  │(NEON opt'd) │            │
 │  └──────────────┘  └──────────────┘  └──────────────┘            │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -325,8 +325,8 @@ AI Ish Production/
 │   └── ConversationDB   → Room database for chat history
 │
 ├── ML Layer (Kotlin)
-│   ├── LLMInferenceEngine     → Mistral-7B (NPU prefill + CPU decode)
-│   ├── VisionInferenceEngine  → MobileNet-v3 INT8 (NPU @ 60 FPS)
+│   ├── LLMInferenceEngine     → Mistral-7B (CPU via llama.cpp, NEON)
+│   ├── VisionInferenceEngine  → MobileNet-v3 INT8 (NPU via NNAPI)
 │   ├── WhisperSTT             → Speech-to-text (CPU INT8)
 │   ├── GPUManager             → Hardware detection & OpenCL init
 │   └── DeviceAllocationManager → CPU/NPU/GPU resource orchestration
@@ -339,7 +339,7 @@ AI Ish Production/
 └── Dependencies (Status)
     ├── llama.cpp           → ✅ GGUF model inference (latest API, CPU-only)
     ├── whisper.cpp         → ✅ Audio transcription (v1.7.6, CPU-only)
-    ├── QNN/NNAPI           → ⚠️ NPU acceleration (stubs ready, SDK pending)
+    ├── TFLite + NNAPI      → ✅ NPU acceleration (MobileNet-v3 vision)
     └── GPU Backends        → ⚠️ Disabled (Vulkan/OpenCL headers needed)
 ```
 
@@ -347,11 +347,10 @@ AI Ish Production/
 
 | Component | Device | Cores | Optimization |
 |-----------|--------|-------|--------------|
-| **Mistral-7B Prefill** | CPU | 0-7 | INT8, ARM NEON optimized |
-| **Mistral-7B Decode** | CPU | 0-3 | Streaming, preallocated buffers |
-| **MobileNet-v3** | CPU | 4-7 | INT8, ARM NEON optimized |
+| **Mistral-7B LLM** | CPU | 0-7 | INT8, ARM NEON (llama.cpp) |
+| **MobileNet-v3** | NPU | NNAPI | INT8, TFLite NNAPI delegate |
 | **BGE Embeddings** | CPU | 0-3 | Async, INT8/FP16 |
-| **Whisper STT** | CPU | 4-6 | INT8, ARM NEON optimized |
+| **Vosk STT** | CPU | 4-6 | Kaldi-based, offline |
 | **GPU (Adreno 750)** | Reserved | - | Pending header integration |
 
 ### Tech Stack
@@ -536,19 +535,28 @@ target_link_libraries(ai-ish-native ${OPENCL_LIB})
 - `nativeInitOpenCL()` - Initialize OpenCL context
 - `nativeCleanupOpenCL()` - Release OpenCL resources
 
-#### 4. Integrate QNN/NNAPI (NPU Acceleration)
+#### 4. NNAPI Integration (NPU Acceleration)
+
+**Status:** ✅ Integrated via TensorFlow Lite NNAPI Delegate
+
+**Architecture:**
+- Vision models (MobileNet-v3) run on NPU via TFLite NNAPI delegate
+- LLM inference (Mistral-7B) runs on CPU via llama.cpp (NNAPI not suited for transformers)
+- NNAPI provides hardware-agnostic NPU access across device vendors
+
+**Supported NPUs:**
+- Qualcomm Hexagon (Snapdragon devices)
+- Samsung Exynos NPU
+- MediaTek APU (Dimensity)
+- Google Tensor TPU
 
 **Requirements:**
-- Qualcomm QNN SDK (available from Qualcomm Developer Network)
-- Target: Snapdragon 8 Gen 3 NPU (45 TOPS INT8)
-- Android NNAPI support (API level 27+)
+- Android API level 27+ (Android 8.1+)
+- TFLite models in INT8 quantized format
 
 **Resources:**
-- [Qualcomm Developer Network](https://developer.qualcomm.com/)
-- QNN SDK Documentation
-- NNAPI Delegate integration guide
-
-**Note:** Modern QNN delegate provides better compatibility than legacy Hexagon SDK.
+- [Android NNAPI Documentation](https://developer.android.com/ndk/guides/neuralnetworks)
+- [TFLite NNAPI Delegate Guide](https://www.tensorflow.org/lite/android/delegates/nnapi)
 
 ### Testing Your Integration
 

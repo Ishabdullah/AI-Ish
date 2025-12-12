@@ -158,6 +158,10 @@ dependencies {
     // Speech Recognition (Vosk)
     implementation("com.alphacephei:vosk-android:0.3.47")
 
+    // TensorFlow Lite with NNAPI delegate for NPU acceleration
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
 

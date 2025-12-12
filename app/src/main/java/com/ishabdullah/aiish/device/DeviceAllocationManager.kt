@@ -17,22 +17,22 @@ import timber.log.Timber
  *
  * Samsung S24 Ultra Hardware:
  * - CPU: Snapdragon 8 Gen 3 (8 cores: 1x Cortex-X4 @ 3.3GHz, 3x A720 @ 3.2GHz, 4x A520 @ 2.3GHz)
- * - NPU: Qualcomm QNN/NNAPI (45 TOPS INT8)
+ * - NPU: NNAPI delegate (hardware-agnostic, uses Hexagon on Snapdragon)
  * - GPU: Adreno 750 (Vulkan support enabled for GGML backends)
  *
  * Allocation Strategy:
  * ┌─────────────────────────────────────────────────────────────┐
- * │ CPU Cores 0-3 (A520 @ 2.3GHz)                               │
+ * │ CPU (llama.cpp with ARM NEON)                               │
+ * │ - LLM inference (Mistral-7B) - full inference on CPU        │
  * │ - BGE embeddings (async, FP16/INT8)                         │
  * │ - Small auxiliary tasks                                     │
- * │ - LLM token decode streaming                                │
  * └─────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────┐
- * │ NPU via QNN/NNAPI (45 TOPS INT8)                            │
- * │ - Mistral-7B prefill (INT8, fused kernels)                  │
- * │ - MobileNet-v3 vision inference (INT8)                      │
- * │ - Preallocated buffers, async execution                     │
+ * │ NPU via NNAPI (TFLite delegate)                             │
+ * │ - MobileNet-v3 vision inference (TFLite INT8)               │
+ * │ - CNN models optimized for NNAPI                            │
+ * │ - Note: NNAPI not suited for transformer (LLM) models       │
  * └─────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────┐
@@ -43,24 +43,23 @@ import timber.log.Timber
  * └─────────────────────────────────────────────────────────────┘
  *
  * Concurrent Execution:
- * - All 3 models can run simultaneously
- * - NPU handles compute-intensive tasks (prefill, vision)
- * - CPU handles streaming decode and embeddings
+ * - Vision models on NPU (NNAPI), LLM on CPU (llama.cpp)
  * - Memory: ~4.5GB total (Mistral 3.5GB + MobileNet 0.5GB + BGE 0.3GB + overhead)
  */
 class DeviceAllocationManager {
 
     enum class DeviceType {
         CPU,      // Snapdragon 8 Gen 3 cores
-        NPU,      // Qualcomm QNN/NNAPI
+        NPU,      // NNAPI delegate (Hexagon, Exynos, etc.)
         GPU,      // Adreno 750 (Vulkan backend)
         AUTO      // Automatic selection based on capabilities
     }
 
     enum class ModelType {
-        LLM_PREFILL,       // Mistral-7B prefill on NPU
-        LLM_DECODE,        // Mistral-7B decode on CPU
-        VISION,            // MobileNet-v3 on NPU
+        @Deprecated("LLM uses CPU-only via llama.cpp")
+        LLM_PREFILL,       // Deprecated - LLM now fully on CPU
+        LLM_DECODE,        // Mistral-7B decode on CPU (now full inference)
+        VISION,            // MobileNet-v3 on NPU (NNAPI)
         EMBEDDING          // BGE on CPU
     }
 
@@ -95,7 +94,7 @@ class DeviceAllocationManager {
         private const val TOTAL_MEMORY_BUDGET = 5000      // MB (safe limit for 12GB device)
 
         // Performance targets
-        private const val NPU_TOPS_QNN_NNAPI = 45      // INT8 TOPS
+        private const val NPU_TOPS_NNAPI = 45      // INT8 TOPS (varies by device)
     }
 
     /**
@@ -113,14 +112,14 @@ class DeviceAllocationManager {
             computeTOPS = 0    // N/A for CPU
         ))
 
-        // NPU (QNN/NNAPI delegate - S24 Ultra has this)
-        val hasNPU = detectQNNNPU()
+        // NPU (NNAPI delegate - hardware varies by device)
+        val hasNPU = detectNNAPINPU()
         devices.add(DeviceInfo(
             type = DeviceType.NPU,
-            name = "Qualcomm NPU (QNN/NNAPI)",
+            name = "NPU (NNAPI delegate)",
             isAvailable = hasNPU,
             memoryMB = 4096,   // Shared with system
-            computeTOPS = NPU_TOPS_QNN_NNAPI
+            computeTOPS = NPU_TOPS_NNAPI
         ))
 
         // GPU (Adreno 750 - Vulkan backend enabled)
@@ -143,13 +142,14 @@ class DeviceAllocationManager {
         return when (modelType) {
             ModelType.LLM_PREFILL -> AllocationResult(
                 modelType = modelType,
-                assignedDevice = DeviceType.NPU,
-                cpuCores = emptyList(),
-                useNPUFusedKernels = true,
+                assignedDevice = DeviceType.CPU,  // LLM now fully on CPU
+                cpuCores = CPU_CORES_EFFICIENCY,
+                useNPUFusedKernels = false,
                 usePreallocatedBuffers = true,
                 estimatedMemoryMB = MEMORY_MISTRAL_7B_INT8
             ).also {
-                Timber.i("✅ LLM_PREFILL → NPU (QNN/NNAPI, fused kernels, ${MEMORY_MISTRAL_7B_INT8}MB)")
+                Timber.w("⚠️ LLM_PREFILL is deprecated - LLM uses CPU via llama.cpp")
+                Timber.i("✅ LLM → CPU (llama.cpp with NEON, ${MEMORY_MISTRAL_7B_INT8}MB)")
             }
 
             ModelType.LLM_DECODE -> AllocationResult(
@@ -171,7 +171,7 @@ class DeviceAllocationManager {
                 usePreallocatedBuffers = true,
                 estimatedMemoryMB = MEMORY_MOBILENET_V3_INT8
             ).also {
-                Timber.i("✅ VISION → NPU (QNN/NNAPI, fused kernels, ${MEMORY_MOBILENET_V3_INT8}MB)")
+                Timber.i("✅ VISION → NPU (NNAPI delegate, ${MEMORY_MOBILENET_V3_INT8}MB)")
             }
 
             ModelType.EMBEDDING -> AllocationResult(
@@ -219,26 +219,49 @@ class DeviceAllocationManager {
     }
 
     /**
-     * Detect Qualcomm NPU (QNN/NNAPI delegate)
+     * Detect NPU via NNAPI delegate support
+     *
+     * NNAPI requires Android 8.1+ (API 27) and works with various NPUs:
+     * - Qualcomm Hexagon (Snapdragon)
+     * - Samsung Exynos NPU
+     * - MediaTek APU (Dimensity)
+     * - Google Tensor TPU
      */
-    private fun detectQNNNPU(): Boolean {
+    private fun detectNNAPINPU(): Boolean {
         try {
-            // Check device model
+            // NNAPI requires API 27+
+            if (Build.VERSION.SDK_INT < 27) {
+                Timber.w("NNAPI requires Android 8.1+ (API 27), device has API ${Build.VERSION.SDK_INT}")
+                return false
+            }
+
+            // Check device model and SoC for known NPU support
             val model = Build.MODEL
-            val isS24Ultra = model.contains("SM-S928", ignoreCase = true) ||
-                           model.contains("Galaxy S24 Ultra", ignoreCase = true)
-
-            // Check SoC
             val soc = Build.HARDWARE
-            val hasSnapdragon8Gen3 = soc.contains("qcom", ignoreCase = true) ||
-                                    soc.contains("kalama", ignoreCase = true)  // SD8G3 codename
+            val board = Build.BOARD
 
-            val hasNPU = isS24Ultra && hasSnapdragon8Gen3
+            // Snapdragon devices (Hexagon NPU)
+            val hasSnapdragon = soc.contains("qcom", ignoreCase = true) ||
+                               board.contains("pineapple", ignoreCase = true) ||  // SD8G3
+                               board.contains("kalama", ignoreCase = true) ||      // SD8G2
+                               board.contains("taro", ignoreCase = true)           // SD8G1
+
+            // Samsung Exynos (NPU)
+            val hasExynos = soc.contains("exynos", ignoreCase = true)
+
+            // MediaTek Dimensity (APU)
+            val hasDimensity = soc.contains("mt68", ignoreCase = true) ||
+                              soc.contains("mt69", ignoreCase = true)
+
+            // Google Tensor
+            val hasTensor = soc.contains("tensor", ignoreCase = true)
+
+            val hasNPU = hasSnapdragon || hasExynos || hasDimensity || hasTensor
 
             if (hasNPU) {
-                Timber.i("✅ NPU detected (S24 Ultra + Snapdragon 8 Gen 3, QNN/NNAPI available)")
+                Timber.i("✅ NPU detected via NNAPI (device: $model, soc: $soc)")
             } else {
-                Timber.w("⚠️ NPU (QNN/NNAPI) not detected (device: $model, soc: $soc)")
+                Timber.w("⚠️ No known NPU detected (device: $model, soc: $soc) - will use CPU fallback")
             }
 
             return hasNPU
@@ -255,30 +278,29 @@ class DeviceAllocationManager {
     fun getAllocationSummary(): String {
         return """
         |═══════════════════════════════════════════════════════════════
-        | AI-Ish Device Allocation Summary (Samsung S24 Ultra)
+        | AI-Ish Device Allocation Summary
         |═══════════════════════════════════════════════════════════════
         |
-        | CPU (Cores 0-3):
-        |   ├─ BGE Embeddings (FP16/INT8, ${MEMORY_BGE_FP16}MB)
-        |   ├─ LLM Token Decode (streaming)
+        | CPU (llama.cpp with ARM NEON):
+        |   ├─ Mistral-7B LLM (${MEMORY_MISTRAL_7B_INT8}MB) - full inference
+        |   ├─ BGE Embeddings (${MEMORY_BGE_FP16}MB)
         |   └─ Auxiliary tasks
         |
-        | NPU (QNN/NNAPI, ${NPU_TOPS_QNN_NNAPI} TOPS INT8):
-        |   ├─ Mistral-7B Prefill (INT8, ${MEMORY_MISTRAL_7B_INT8}MB, fused kernels)
-        |   └─ MobileNet-v3 Vision (INT8, ${MEMORY_MOBILENET_V3_INT8}MB, fused kernels)
+        | NPU (NNAPI delegate):
+        |   └─ MobileNet-v3 Vision (TFLite INT8, ${MEMORY_MOBILENET_V3_INT8}MB)
         |
-        | GPU (Adreno 750, Vulkan):
-        |   └─ Available for GGML acceleration (fallback/parallel workloads)
+        | GPU (Adreno/Mali/Tensor, Vulkan):
+        |   └─ Available for GGML acceleration (fallback/parallel)
         |
         | Memory Budget:
         |   Total: ${MEMORY_MISTRAL_7B_INT8 + MEMORY_MOBILENET_V3_INT8 + MEMORY_BGE_FP16 + MEMORY_OVERHEAD}MB / ${TOTAL_MEMORY_BUDGET}MB
-        |   ├─ Mistral-7B: ${MEMORY_MISTRAL_7B_INT8}MB
-        |   ├─ MobileNet-v3: ${MEMORY_MOBILENET_V3_INT8}MB
-        |   ├─ BGE: ${MEMORY_BGE_FP16}MB
+        |   ├─ Mistral-7B: ${MEMORY_MISTRAL_7B_INT8}MB (CPU)
+        |   ├─ MobileNet-v3: ${MEMORY_MOBILENET_V3_INT8}MB (NPU)
+        |   ├─ BGE: ${MEMORY_BGE_FP16}MB (CPU)
         |   └─ Overhead: ${MEMORY_OVERHEAD}MB
         |
         | Concurrent Execution: ✅ ENABLED
-        |   All 3 models run simultaneously without conflicts
+        |   LLM on CPU, Vision on NPU (NNAPI)
         |═══════════════════════════════════════════════════════════════
         """.trimMargin()
     }
