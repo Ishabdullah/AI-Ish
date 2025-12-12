@@ -21,3 +21,7 @@ out/
 .cxx/
 *.keystore
 !debug.keystore
+
+# Vendored libraries (clone during build)
+app/src/main/cpp/llama.cpp/
+app/src/main/cpp/whisper.cpp/
