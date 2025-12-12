@@ -45,11 +45,12 @@ find_library(log-lib log)
 find_library(android-lib android)
 
 #=============================================================================
-# LLAMA.CPP & WHISPER.CPP INTEGRATION
+# LLAMA.CPP INTEGRATION
 #=============================================================================
 #
-# Full AI inference is now ENABLED with llama.cpp and whisper.cpp.
+# Full LLM inference is now ENABLED with llama.cpp.
 # CPU-only inference is active (no GPU acceleration yet).
+# Speech-to-text uses Vosk (Gradle dependency, no native build required).
 #
 #=============================================================================
 
@@ -79,31 +80,14 @@ endif()
 # Add llama.cpp subdirectory
 add_subdirectory(llama.cpp llama-build)
 
-# Disable whisper.cpp features we don't need for Android
-set(WHISPER_BUILD_TESTS OFF CACHE BOOL "whisper: build tests" FORCE)
-set(WHISPER_BUILD_EXAMPLES OFF CACHE BOOL "whisper: build examples" FORCE)
-set(WHISPER_BUILD_SERVER OFF CACHE BOOL "whisper: build server" FORCE)
-set(WHISPER_STANDALONE OFF CACHE BOOL "whisper: standalone build" FORCE)
-
-# Disable extra dependencies
-set(WHISPER_CURL OFF CACHE BOOL "whisper: use libcurl" FORCE)
-set(WHISPER_SDL2 OFF CACHE BOOL "whisper: use SDL2" FORCE)
-set(WHISPER_FFMPEG OFF CACHE BOOL "whisper: use FFmpeg" FORCE)
-set(WHISPER_COREML OFF CACHE BOOL "whisper: use CoreML" FORCE)
-set(WHISPER_OPENVINO OFF CACHE BOOL "whisper: use OpenVINO" FORCE)
-
-# Add whisper.cpp subdirectory
-add_subdirectory(whisper.cpp whisper-build)
-
 #=============================================================================
 # AIISH NATIVE LIBRARY (JNI Bridge)
 #=============================================================================
 
-# Source files (full implementations with llama.cpp and whisper.cpp)
+# Source files (llama.cpp for LLM, Vosk for STT via Kotlin/JNI)
 set(SOURCES
     llm_bridge.cpp
     gpu_backend.cpp
-    whisper_bridge.cpp
     npu_delegate.cpp
 )
 
@@ -116,14 +100,11 @@ target_include_directories(aiish_native PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/include
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/src
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/whisper.cpp/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/whisper.cpp/src
 )
 
-# Link libraries
+# Link libraries (Vosk is linked via Gradle, not here)
 target_link_libraries(aiish_native
     llama
-    whisper
     ${log-lib}
     ${android-lib}
 )

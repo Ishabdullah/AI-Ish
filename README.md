@@ -41,15 +41,17 @@ See [EXECUTIVE_REVIEW.md](EXECUTIVE_REVIEW.md) for detailed technical assessment
 
 AI Ish has been upgraded with the latest native AI inference engines and modern API integrations:
 
-#### ✅ Whisper.cpp & llama.cpp - Latest Versions
-- **Both libraries use latest master** - Guaranteed API compatibility between llama.cpp and whisper.cpp
-- **whisper.cpp API** - Using modern `suppress_nst` field (abbreviated from `suppress_non_speech_tokens`)
-- **Nested parameters** - Using `greedy.best_of` and `beam_search.beam_size` structures
-- **llama.cpp API** - Modern API with `llama_model_default_params()` and `llama_context_default_params()`
+#### ✅ LLM & STT Integration
+- **llama.cpp (Latest)** - Modern API with `llama_model_default_params()` and `llama_context_default_params()`
 - **Sampler chain** - Proper initialization with `llama_sampler_chain_init()`
 - **Tokenizer** - Using vocab-based API for better compatibility
 - **Cleaned codebase** - Removed deprecated flags and legacy code
 - **Performance optimized** - ARM NEON and mobile-specific tuning
+- **Vosk STT** - Replaced whisper.cpp with Vosk for better Android compatibility
+  - Smaller models (40-50MB vs 145MB)
+  - Proven offline speech recognition
+  - No native build complexities
+  - Gradle dependency integration
 
 #### ✅ NPU Support (Qualcomm QNN/NNAPI) - Ready for Integration
 - **Removed Hexagon SDK references** - Migrated to modern QNN delegate terminology
@@ -77,8 +79,9 @@ AI Ish has been upgraded with the latest native AI inference engines and modern 
 
 ### Build System Status
 - ✅ All native bridges compile without errors
-- ✅ Android CI/CD pipeline configured for latest llama.cpp + whisper.cpp
-- ✅ NDK r25 full compatibility
+- ✅ Android CI/CD pipeline configured for latest llama.cpp
+- ✅ NDK r25 full compatibility for llama.cpp
+- ✅ Vosk integrated via Gradle (no native build required)
 - ✅ Production-ready CPU-only build configuration
 - ⚠️ GPU acceleration pending (requires external headers)
 
@@ -128,7 +131,7 @@ Concurrent Execution: ✅ ALL 3 MODELS RUN SIMULTANEOUSLY (CPU-optimized)
 | **Mistral-7B-Instruct** | NPU + CPU | INT8 | 3.5GB | 25-35 t/s |
 | **MobileNet-v3-Large** | NPU | INT8 | 500MB | ~60 FPS |
 | **BGE-Small-EN** | CPU | INT8/FP16 | 300MB | ~500 emb/s |
-| **Whisper-Tiny** | CPU | INT8 | 145MB | 5-10x realtime |
+| **Vosk STT (Small)** | CPU | - | 40-50MB | 5-10x realtime |
 
 ### ⚡ **Hardware Acceleration**
 - **NPU via QNN/NNAPI** - 45 TOPS INT8 inference
@@ -370,7 +373,7 @@ AI Ish Production/
 | **LLM Decode (streaming)** | CPU | 15-25 t/s | INT8 quantization |
 | **Vision Inference** | CPU | ~15-30 FPS | ARM NEON optimized |
 | **Embedding Generation** | CPU | ~300 emb/s | Batch processing |
-| **Speech-to-Text** | CPU | 5-10x realtime | Whisper-Tiny INT8 |
+| **Speech-to-Text** | CPU | 5-10x realtime | Vosk Small (40-50MB) |
 | **Concurrent (All 3)** | CPU | ✅ Possible | CPU core allocation |
 
 ---

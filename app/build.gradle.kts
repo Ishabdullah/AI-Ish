@@ -155,6 +155,9 @@ dependencies {
     // JSON
     implementation("com.google.code.gson:gson:2.10.1")
 
+    // Speech Recognition (Vosk)
+    implementation("com.alphacephei:vosk-android:0.3.47")
+
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
 

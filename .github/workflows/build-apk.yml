@@ -28,7 +28,7 @@ jobs:
       - name: 🔧 Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: 🧠 Clone llama.cpp and whisper.cpp for native AI
+      - name: 🧠 Clone llama.cpp for native LLM inference
         run: |
           echo "🧠 Cloning llama.cpp for LLM inference..."
           cd app/src/main/cpp
@@ -41,25 +41,16 @@ jobs:
           git clone --depth 1 https://github.com/ggerganov/llama.cpp.git
           echo "✅ llama.cpp cloned ($(du -sh llama.cpp | cut -f1))"
 
-          # Clone whisper.cpp (lightweight depth=1 clone)
-          if [ -d "whisper.cpp" ]; then
-            echo "⚠️ whisper.cpp already exists, removing..."
-            rm -rf whisper.cpp
-          fi
-          echo "🎤 Cloning whisper.cpp for speech recognition..."
-          # Use latest whisper.cpp (compatible with latest llama.cpp ggml API)
-          git clone --depth 1 https://github.com/ggerganov/whisper.cpp.git
-          echo "✅ whisper.cpp (latest) cloned ($(du -sh whisper.cpp | cut -f1))"
-
-          # Clean up .git directories to reduce size
-          rm -rf llama.cpp/.git whisper.cpp/.git
-          echo "🧹 Cleaned up .git directories"
+          # Clean up .git directory to reduce size
+          rm -rf llama.cpp/.git
+          echo "🧹 Cleaned up .git directory"
 
           cd ../../../..
 
           echo ""
-          echo "✅ Native AI libraries ready!"
-          echo "📊 Total size: $(du -sh app/src/main/cpp/llama.cpp app/src/main/cpp/whisper.cpp | awk '{s+=$1} END {print s "M"}')"
+          echo "✅ llama.cpp ready for LLM inference!"
+          echo "🎤 Speech-to-text uses Vosk (Gradle dependency)"
+          echo "📊 llama.cpp size: $(du -sh app/src/main/cpp/llama.cpp | cut -f1)"
 
       - name: 🔐 Create debug keystore for signing
         run: |

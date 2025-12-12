@@ -9,55 +9,58 @@
 
 package com.ishabdullah.aiish.audio
 
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import org.vosk.Model
+import org.vosk.Recognizer
+import org.vosk.android.RecognitionListener
+import org.vosk.android.SpeechService
 import timber.log.Timber
 import java.io.File
 
 /**
- * WhisperSTT - Speech-to-Text using Whisper model
+ * WhisperSTT - Speech-to-Text using Vosk library
+ *
+ * Switched from whisper.cpp to Vosk for:
+ * - Better Android compatibility (no native build issues)
+ * - Smaller models (50MB vs 145MB)
+ * - Proven offline STT
+ * - Easy integration via Gradle
  *
  * Supports:
- * - Whisper-Tiny (145MB int8) - Fast, 5-10x realtime on mobile
- * - Whisper-Base (290MB int8) - Better accuracy
  * - Real-time transcription with streaming
- * - Multiple languages (auto-detect or specify)
+ * - Multiple languages (English, Spanish, French, German, etc.)
+ * - Offline processing
  * - Punctuation and capitalization
  */
-class WhisperSTT {
+class WhisperSTT(private val context: Context) {
 
     companion object {
-        init {
-            try {
-                System.loadLibrary("aiish_native")
-                Timber.i("WhisperSTT: Native library loaded")
-            } catch (e: UnsatisfiedLinkError) {
-                Timber.e(e, "Failed to load native library for Whisper")
-            }
-        }
-
-        // Whisper model sizes
-        const val MODEL_TINY = "tiny"    // 145MB, fastest
-        const val MODEL_BASE = "base"    // 290MB, better accuracy
-        const val MODEL_SMALL = "small"  // 967MB, high accuracy (too slow for mobile)
+        // Model sizes (Vosk models are smaller than Whisper)
+        const val MODEL_SMALL = "vosk-model-small-en-us-0.15"  // ~40MB, fast
+        const val MODEL_EN = "vosk-model-en-us-0.22"           // ~1.8GB, high accuracy
 
         // Languages
-        const val LANG_AUTO = "auto"     // Auto-detect
-        const val LANG_EN = "en"         // English
-        const val LANG_ES = "es"         // Spanish
-        const val LANG_FR = "fr"         // French
-        const val LANG_DE = "de"         // German
-        const val LANG_ZH = "zh"         // Chinese
-        const val LANG_JA = "ja"         // Japanese
-        const val LANG_AR = "ar"         // Arabic
+        const val LANG_EN = "en-us"         // English (US)
+        const val LANG_ES = "es"            // Spanish
+        const val LANG_FR = "fr"            // French
+        const val LANG_DE = "de"            // German
+        const val LANG_ZH = "zh"            // Chinese
+        const val LANG_RU = "ru"            // Russian
+        const val LANG_AR = "ar"            // Arabic
     }
+
+    private var model: Model? = null
+    private var recognizer: Recognizer? = null
+    private var speechService: SpeechService? = null
 
     private var isModelLoaded = false
     private var currentModelPath: String? = null
-    private var currentLanguage = LANG_AUTO
+    private var currentLanguage = LANG_EN
 
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
@@ -65,104 +68,84 @@ class WhisperSTT {
     private val _liveTranscription = MutableStateFlow("")
     val liveTranscription: StateFlow<String> = _liveTranscription.asStateFlow()
 
-    // Native methods
-    private external fun nativeLoadWhisperModel(
-        modelPath: String,
-        language: String
-    ): Boolean
-
-    private external fun nativeTranscribe(
-        audioData: FloatArray,
-        audioLength: Int,
-        enableTimestamps: Boolean
-    ): String
-
-    private external fun nativeTranscribeStreaming(
-        audioData: FloatArray,
-        audioLength: Int
-    ): String
-
-    private external fun nativeGetLanguage(): String
-    private external fun nativeReleaseWhisperModel()
-
     /**
-     * Load Whisper model
+     * Load Vosk model
      */
     suspend fun loadModel(
         modelFile: File,
-        language: String = LANG_AUTO
+        language: String = LANG_EN
     ): Boolean = withContext(Dispatchers.IO) {
         try {
             if (isModelLoaded && currentModelPath == modelFile.absolutePath) {
-                Timber.d("Whisper model already loaded: ${modelFile.name}")
+                Timber.d("Vosk model already loaded: ${modelFile.name}")
                 return@withContext true
             }
 
             if (!modelFile.exists()) {
-                Timber.e("Whisper model file not found: ${modelFile.absolutePath}")
+                Timber.e("Vosk model file not found: ${modelFile.absolutePath}")
                 return@withContext false
             }
 
-            Timber.i("Loading Whisper model: ${modelFile.name} (${modelFile.length() / 1024 / 1024}MB)")
+            Timber.i("Loading Vosk model: ${modelFile.name} (${modelFile.length() / 1024 / 1024}MB)")
 
-            val success = nativeLoadWhisperModel(
-                modelPath = modelFile.absolutePath,
-                language = language
-            )
+            // Initialize Vosk model
+            model = Model(modelFile.absolutePath)
 
-            if (success) {
-                isModelLoaded = true
-                currentModelPath = modelFile.absolutePath
-                currentLanguage = language
-                Timber.i("Whisper model loaded successfully (lang=$language)")
-            } else {
-                Timber.e("Failed to load Whisper model")
-            }
+            // Create recognizer with 16kHz sample rate (standard for speech)
+            recognizer = Recognizer(model, 16000.0f)
 
-            success
+            isModelLoaded = true
+            currentModelPath = modelFile.absolutePath
+            currentLanguage = language
+
+            Timber.i("Vosk model loaded successfully (lang=$language)")
+            true
 
         } catch (e: Exception) {
-            Timber.e(e, "Error loading Whisper model")
+            Timber.e(e, "Error loading Vosk model")
             false
         }
     }
 
     /**
      * Transcribe audio to text
+     * @param audioData PCM16 audio data (16kHz, mono)
      */
     suspend fun transcribe(
         audioData: FloatArray,
         enableTimestamps: Boolean = false
     ): TranscriptionResult = withContext(Dispatchers.IO) {
         try {
-            if (!isModelLoaded) {
+            if (!isModelLoaded || recognizer == null) {
                 return@withContext TranscriptionResult(
                     success = false,
                     text = "",
                     language = "",
                     processingTimeMs = 0,
-                    error = "Whisper model not loaded"
+                    error = "Vosk model not loaded"
                 )
             }
 
             _isProcessing.value = true
             val startTime = System.currentTimeMillis()
 
-            val transcribedText = nativeTranscribe(
-                audioData = audioData,
-                audioLength = audioData.size,
-                enableTimestamps = enableTimestamps
-            )
+            // Convert float audio to short (PCM16)
+            val audioShorts = audioData.map { (it * Short.MAX_VALUE).toInt().toShort() }.toShortArray()
+
+            // Feed audio to recognizer
+            recognizer?.acceptWaveForm(audioShorts, audioShorts.size)
+
+            // Get final result
+            val resultJson = recognizer?.finalResult
+            val text = parseVoskResult(resultJson ?: "{}")
 
             val processingTime = System.currentTimeMillis() - startTime
-            val detectedLanguage = nativeGetLanguage()
-
             _isProcessing.value = false
 
             TranscriptionResult(
                 success = true,
-                text = transcribedText.trim(),
-                language = detectedLanguage,
+                text = text.trim(),
+                language = currentLanguage,
                 processingTimeMs = processingTime,
                 error = null
             )
@@ -188,14 +171,14 @@ class WhisperSTT {
         enableTimestamps: Boolean = false
     ): TranscriptionResult = withContext(Dispatchers.IO) {
         try {
-            // TODO: Load audio file and convert to FloatArray
-            // For now, return placeholder
+            // Read audio file and convert to FloatArray
+            // This is a placeholder - actual implementation would depend on audio format
             TranscriptionResult(
                 success = false,
                 text = "",
                 language = "",
                 processingTimeMs = 0,
-                error = "File transcription not yet implemented"
+                error = "File transcription not yet implemented for Vosk"
             )
         } catch (e: Exception) {
             Timber.e(e, "Error transcribing file")
@@ -214,17 +197,27 @@ class WhisperSTT {
      */
     suspend fun transcribeStreaming(audioData: FloatArray): String = withContext(Dispatchers.IO) {
         try {
-            if (!isModelLoaded) {
+            if (!isModelLoaded || recognizer == null) {
                 return@withContext ""
             }
 
-            val partial = nativeTranscribeStreaming(
-                audioData = audioData,
-                audioLength = audioData.size
-            )
+            // Convert float audio to short (PCM16)
+            val audioShorts = audioData.map { (it * Short.MAX_VALUE).toInt().toShort() }.toShortArray()
 
-            _liveTranscription.value = partial
-            partial
+            // Feed audio chunk to recognizer
+            if (recognizer?.acceptWaveForm(audioShorts, audioShorts.size) == true) {
+                // We have a complete utterance
+                val resultJson = recognizer?.result
+                val text = parseVoskResult(resultJson ?: "{}")
+                _liveTranscription.value = text
+                text
+            } else {
+                // Partial result
+                val partialJson = recognizer?.partialResult
+                val partial = parseVoskPartialResult(partialJson ?: "{}")
+                _liveTranscription.value = partial
+                partial
+            }
 
         } catch (e: Exception) {
             Timber.e(e, "Error during streaming transcription")
@@ -237,7 +230,7 @@ class WhisperSTT {
      */
     fun setLanguage(language: String) {
         currentLanguage = language
-        Timber.d("Whisper language set to: $language")
+        Timber.d("STT language set to: $language")
     }
 
     /**
@@ -261,7 +254,11 @@ class WhisperSTT {
      */
     fun estimateSpeed(audioLengthSeconds: Float, processingTimeMs: Long): Float {
         val processingTimeSeconds = processingTimeMs / 1000f
-        return audioLengthSeconds / processingTimeSeconds
+        return if (processingTimeSeconds > 0) {
+            audioLengthSeconds / processingTimeSeconds
+        } else {
+            0f
+        }
     }
 
     /**
@@ -270,15 +267,48 @@ class WhisperSTT {
     fun release() {
         if (isModelLoaded) {
             try {
-                nativeReleaseWhisperModel()
-                Timber.i("Whisper model released")
+                recognizer?.close()
+                model?.close()
+                speechService?.stop()
+                Timber.i("Vosk model released")
             } catch (e: Exception) {
-                Timber.e(e, "Error releasing Whisper model")
+                Timber.e(e, "Error releasing Vosk model")
             }
         }
+        recognizer = null
+        model = null
+        speechService = null
         isModelLoaded = false
         currentModelPath = null
         _liveTranscription.value = ""
+    }
+
+    /**
+     * Parse Vosk JSON result to extract text
+     */
+    private fun parseVoskResult(json: String): String {
+        return try {
+            // Vosk returns: {"text": "transcribed text"}
+            val textMatch = Regex("\"text\"\\s*:\\s*\"([^\"]*)\"").find(json)
+            textMatch?.groupValues?.get(1) ?: ""
+        } catch (e: Exception) {
+            Timber.e(e, "Error parsing Vosk result")
+            ""
+        }
+    }
+
+    /**
+     * Parse Vosk partial JSON result to extract text
+     */
+    private fun parseVoskPartialResult(json: String): String {
+        return try {
+            // Vosk returns: {"partial": "partial text"}
+            val textMatch = Regex("\"partial\"\\s*:\\s*\"([^\"]*)\"").find(json)
+            textMatch?.groupValues?.get(1) ?: ""
+        } catch (e: Exception) {
+            Timber.e(e, "Error parsing Vosk partial result")
+            ""
+        }
     }
 }
 
