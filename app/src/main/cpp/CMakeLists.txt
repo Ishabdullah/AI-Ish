@@ -76,7 +76,7 @@ if(ANDROID)
 endif()
 
 # Add llama.cpp subdirectory
-add_subdirectory(llama.cpp)
+add_subdirectory(llama.cpp llama-build)
 
 # Disable whisper.cpp features we don't need for Android
 set(WHISPER_BUILD_TESTS OFF CACHE BOOL "whisper: build tests" FORCE)
@@ -92,7 +92,7 @@ set(WHISPER_COREML OFF CACHE BOOL "whisper: use CoreML" FORCE)
 set(WHISPER_OPENVINO OFF CACHE BOOL "whisper: use OpenVINO" FORCE)
 
 # Add whisper.cpp subdirectory
-add_subdirectory(whisper.cpp)
+add_subdirectory(whisper.cpp whisper-build)
 
 #=============================================================================
 # AIISH NATIVE LIBRARY (JNI Bridge)
