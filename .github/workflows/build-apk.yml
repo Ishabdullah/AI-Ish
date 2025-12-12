@@ -47,9 +47,9 @@ jobs:
             rm -rf whisper.cpp
           fi
           echo "🎤 Cloning whisper.cpp for speech recognition..."
-          # Pin to v1.7.1 for compatibility with current llama.cpp/ggml (v1.7.6 has GGML_KQ_MASK_PAD issues)
-          git clone --depth 1 --branch v1.7.1 https://github.com/ggerganov/whisper.cpp.git
-          echo "✅ whisper.cpp v1.7.1 cloned ($(du -sh whisper.cpp | cut -f1))"
+          # Use latest whisper.cpp (compatible with latest llama.cpp ggml API)
+          git clone --depth 1 https://github.com/ggerganov/whisper.cpp.git
+          echo "✅ whisper.cpp (latest) cloned ($(du -sh whisper.cpp | cut -f1))"
 
           # Clean up .git directories to reduce size
           rm -rf llama.cpp/.git whisper.cpp/.git

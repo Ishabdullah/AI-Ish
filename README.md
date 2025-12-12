@@ -41,18 +41,15 @@ See [EXECUTIVE_REVIEW.md](EXECUTIVE_REVIEW.md) for detailed technical assessment
 
 AI Ish has been upgraded with the latest native AI inference engines and modern API integrations:
 
-#### ✅ Whisper.cpp API Modernization (v1.7.6)
-- **Updated to v1.7.6** - Latest stable release with full compatibility
-- **API field updates** - Updated to `suppress_nst` (abbreviated from `suppress_non_speech_tokens`)
+#### ✅ Whisper.cpp & llama.cpp - Latest Versions
+- **Both libraries use latest master** - Guaranteed API compatibility between llama.cpp and whisper.cpp
+- **whisper.cpp API** - Using modern `suppress_nst` field (abbreviated from `suppress_non_speech_tokens`)
 - **Nested parameters** - Using `greedy.best_of` and `beam_search.beam_size` structures
-- **Maintained compatibility** - All existing functionality preserved
-- **Performance optimized** - ARM NEON and mobile-specific tuning
-
-#### ✅ llama.cpp Latest Integration
-- **Modern API** - Using `llama_model_default_params()` and `llama_context_default_params()`
+- **llama.cpp API** - Modern API with `llama_model_default_params()` and `llama_context_default_params()`
 - **Sampler chain** - Proper initialization with `llama_sampler_chain_init()`
-- **Tokenizer updates** - Using vocab-based API for better compatibility
+- **Tokenizer** - Using vocab-based API for better compatibility
 - **Cleaned codebase** - Removed deprecated flags and legacy code
+- **Performance optimized** - ARM NEON and mobile-specific tuning
 
 #### ✅ NPU Support (Qualcomm QNN/NNAPI) - Ready for Integration
 - **Removed Hexagon SDK references** - Migrated to modern QNN delegate terminology
@@ -80,7 +77,7 @@ AI Ish has been upgraded with the latest native AI inference engines and modern 
 
 ### Build System Status
 - ✅ All native bridges compile without errors
-- ✅ Android CI/CD pipeline passes on GitHub Actions (commit: 42044ef)
+- ✅ Android CI/CD pipeline configured for latest llama.cpp + whisper.cpp
 - ✅ NDK r25 full compatibility
 - ✅ Production-ready CPU-only build configuration
 - ⚠️ GPU acceleration pending (requires external headers)

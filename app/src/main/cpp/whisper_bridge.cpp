@@ -76,9 +76,9 @@ static whisper_full_params get_default_params() {
     params.language = "en";
     params.detect_language = false;
 
-    // Suppression (Whisper.cpp v1.7.1 API)
+    // Suppression (latest Whisper.cpp API)
     params.suppress_blank = true;
-    params.suppress_non_speech_tokens = true;
+    params.suppress_nst = true;  // abbreviated from suppress_non_speech_tokens in v1.7.6+
 
     // Beam search (greedy for speed on mobile) - uses nested strategy structs
     params.greedy.best_of = 1;
