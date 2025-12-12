@@ -39,7 +39,7 @@ data class VisionResult(
  * VisionManager - MobileNet-v3 INT8 Production + Legacy Models
  *
  * Production Mode (MobileNet-v3 INT8 on NPU):
- * - Device: NPU Hexagon v81 (45 TOPS INT8)
+ * - Device: NPU via QNN/NNAPI delegate (45 TOPS INT8)
  * - Model: MobileNet-v3-Large INT8
  * - Memory: ~500MB
  * - Performance: ~60 FPS on S24 Ultra NPU
@@ -136,7 +136,7 @@ class VisionManager(private val context: Context) {
             )
 
             Timber.i("Device allocation:")
-            Timber.i("  └─ Vision: NPU Hexagon v81 (fused kernels)")
+            Timber.i("  └─ Vision: NPU (QNN/NNAPI delegate, fused kernels)")
 
             // Load MobileNet-v3 on NPU
             val success = nativeLoadMobileNetV3(
@@ -153,7 +153,7 @@ class VisionManager(private val context: Context) {
                 Timber.i("✅ MobileNet-v3 INT8 loaded successfully")
                 Timber.i("   - Memory: ~500MB (INT8)")
                 Timber.i("   - Mode: PRODUCTION (NPU)")
-                Timber.i("   - Device: NPU Hexagon v81 (45 TOPS)")
+                Timber.i("   - Device: NPU (QNN/NNAPI delegate, 45 TOPS)")
                 Timber.i("   - Performance target: ~60 FPS")
                 Timber.i("═══════════════════════════════════════════════════════════")
             } else {
@@ -448,7 +448,7 @@ class VisionManager(private val context: Context) {
             |Performance Stats (Production Mode):
             |  - Inference time: ${lastInferenceTimeMs}ms
             |  - FPS: ${lastFPS.toInt()}
-            |  - Device: NPU Hexagon v81
+            |  - Device: NPU (QNN/NNAPI delegate)
             |  - Model: MobileNet-v3 INT8
             """.trimMargin()
         } else {

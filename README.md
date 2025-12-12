@@ -4,7 +4,7 @@
 
 [![Build Status](https://github.com/Ishabdullah/AI-Ish/workflows/Build%20AI%20Ish%20APK/badge.svg)](https://github.com/Ishabdullah/AI-Ish/actions)
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com/)
-[![NPU](https://img.shields.io/badge/NPU-Hexagon%20v81-blue.svg)](https://www.qualcomm.com/)
+[![NPU](https://img.shields.io/badge/NPU-QNN%2FNNAPI-blue.svg)](https://www.qualcomm.com/)
 
 **Copyright © 2025 Ismail Abdullah. All rights reserved.**
 
@@ -24,12 +24,12 @@
 | **Native JNI Bridge** | ⚠️ Stubs Only | 0% (compiles, no inference) |
 | **llama.cpp Integration** | ⏳ Pending | 0% |
 | **whisper.cpp Integration** | ⏳ Pending | 0% |
-| **Hexagon NPU Support** | ⏳ Pending | 0% |
+| **QNN/NNAPI NPU Support** | ⏳ Pending | 0% |
 | **OpenCL GPU Support** | ⏳ Pending | 0% |
 
 **What Works:** Complete Android app with polished UI, model download system, settings, and all user-facing features.
 
-**What's Missing:** Actual AI inference (JNI methods return placeholder values). Integration of llama.cpp, whisper.cpp, Hexagon SDK, and OpenCL is required for functional AI capabilities.
+**What's Missing:** Actual AI inference (JNI methods return placeholder values). Integration of llama.cpp, whisper.cpp, QNN/NNAPI delegates, and OpenCL is required for functional AI capabilities.
 
 See [EXECUTIVE_REVIEW.md](EXECUTIVE_REVIEW.md) for detailed technical assessment.
 
@@ -41,7 +41,7 @@ AI Ish is optimized for the **Samsung Galaxy S24 Ultra** with Snapdragon 8 Gen 3
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ NPU (Hexagon v81 - 45 TOPS INT8)                             │
+│ NPU via QNN/NNAPI delegate (45 TOPS INT8)                    │
 │ ├─ Mistral-7B Prefill (INT8, 15-20ms for 512 tokens)         │
 │ └─ MobileNet-v3 Vision (INT8, ~60 FPS)                       │
 └──────────────────────────────────────────────────────────────┘
@@ -82,7 +82,7 @@ Concurrent Execution: ✅ ALL 3 MODELS RUN SIMULTANEOUSLY
 | **Whisper-Tiny** | CPU | INT8 | 145MB | 5-10x realtime |
 
 ### ⚡ **Hardware Acceleration**
-- **NPU Hexagon v81** - 45 TOPS INT8 inference
+- **NPU via QNN/NNAPI** - 45 TOPS INT8 inference
 - **Fused Kernels** - Optimized MatMul+Add+ReLU operations
 - **Preallocated Buffers** - Zero-copy memory operations
 - **CPU Affinity** - Dedicated cores for different workloads

@@ -63,7 +63,7 @@ object ModelCatalog {
 
     /**
      * Mistral-7B-Instruct INT8 - Primary LLM
-     * Device: NPU Hexagon v81 (prefill) + CPU (decode)
+     * Device: NPU via QNN/NNAPI delegate (prefill) + CPU (decode)
      * Quantization: INT8 for minimal memory and max throughput
      * Memory: ~3.5GB
      * Performance: ~25-35 tokens/sec on S24 Ultra
@@ -82,7 +82,7 @@ object ModelCatalog {
 
     /**
      * MobileNet-v3 INT8 - Vision Model
-     * Device: NPU Hexagon v81
+     * Device: NPU via QNN/NNAPI delegate
      * Quantization: INT8 for fast inference
      * Memory: ~500MB
      * Performance: ~60 FPS on S24 Ultra NPU

@@ -14,7 +14,7 @@ AI-Ish is a sophisticated on-device AI assistant application built exclusively f
 
 **Current Status:** The Kotlin/Android layer is 100% complete and production-ready. The application compiles, runs, and presents a polished user experience. However, the native inference layer (C++ JNI bridge to llama.cpp/whisper.cpp) consists of well-documented stub implementations that return placeholder values. This allows full UI/UX testing and development while actual AI inference capabilities await native library integration.
 
-**Bottom Line:** AI-Ish has excellent architectural foundations and a complete user-facing application. The core challenge is integrating the native ML libraries (llama.cpp, whisper.cpp, Hexagon SDK, OpenCL) to unlock actual AI inference capabilities. With proper resources allocated to native integration, this could become a market-leading on-device AI solution within 2-3 months.
+**Bottom Line:** AI-Ish has excellent architectural foundations and a complete user-facing application. The core challenge is integrating the native ML libraries (llama.cpp, whisper.cpp, QNN/NNAPI delegates, OpenCL) to unlock actual AI inference capabilities. With proper resources allocated to native integration, this could become a market-leading on-device AI solution within 2-3 months.
 
 ---
 

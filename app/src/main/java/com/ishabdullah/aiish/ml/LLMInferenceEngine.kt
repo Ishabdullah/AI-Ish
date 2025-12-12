@@ -24,7 +24,7 @@ import java.io.File
  *
  * Architecture (Samsung S24 Ultra Optimized):
  * ┌──────────────────────────────────────────────────────────────┐
- * │ Stage 1: PREFILL (NPU Hexagon v81)                           │
+ * │ Stage 1: PREFILL (NPU via QNN/NNAPI delegate)                │
  * │ - Process input prompt on NPU at 45 TOPS INT8                │
  * │ - Fused kernels for MatMul+Add+ReLU                          │
  * │ - Preallocated buffers for zero-copy operations             │
@@ -166,7 +166,7 @@ class LLMInferenceEngine {
             )
 
             Timber.i("Device allocation:")
-            Timber.i("  ├─ Prefill: NPU Hexagon v81 (fused kernels)")
+            Timber.i("  ├─ Prefill: NPU (QNN/NNAPI delegate, fused kernels)")
             Timber.i("  └─ Decode: CPU cores ${CPU_CORES_DECODE} (streaming)")
 
             // Load model with NPU + CPU split
@@ -186,7 +186,7 @@ class LLMInferenceEngine {
                 Timber.i("   - Context size: $contextSize")
                 Timber.i("   - Memory: ~3.5GB (INT8)")
                 Timber.i("   - Mode: PRODUCTION (NPU + CPU)")
-                Timber.i("   - Prefill: NPU Hexagon v81 (45 TOPS)")
+                Timber.i("   - Prefill: NPU (QNN/NNAPI delegate, 45 TOPS)")
                 Timber.i("   - Decode: CPU cores 0-3 (25-35 t/s)")
                 Timber.i("═══════════════════════════════════════════════════════════")
             } else {
@@ -557,7 +557,7 @@ class LLMInferenceEngine {
             |  - Prefill: ${lastPrefillTimeMs}ms (NPU)
             |  - Decode: ${lastDecodeTimeMs}ms (CPU)
             |  - Throughput: ${lastTokensPerSecond.toInt()} tokens/sec
-            |  - Mode: NPU Hexagon v81 + CPU Cores 0-3
+            |  - Mode: NPU (QNN/NNAPI) + CPU Cores 0-3
             """.trimMargin()
         } else {
             "Performance stats only available in production mode"

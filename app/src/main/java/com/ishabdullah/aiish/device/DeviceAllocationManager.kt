@@ -29,7 +29,7 @@ import timber.log.Timber
  * └─────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────┐
- * │ NPU Hexagon v81 (45 TOPS INT8)                              │
+ * │ NPU via QNN/NNAPI (45 TOPS INT8)                            │
  * │ - Mistral-7B prefill (INT8, fused kernels)                  │
  * │ - MobileNet-v3 vision inference (INT8)                      │
  * │ - Preallocated buffers, async execution                     │
@@ -94,7 +94,7 @@ class DeviceAllocationManager {
         private const val TOTAL_MEMORY_BUDGET = 5000      // MB (safe limit for 12GB device)
 
         // Performance targets
-        private const val NPU_TOPS_HEXAGON_V81 = 45      // INT8 TOPS
+        private const val NPU_TOPS_QNN_NNAPI = 45      // INT8 TOPS
     }
 
     /**
@@ -112,14 +112,14 @@ class DeviceAllocationManager {
             computeTOPS = 0    // N/A for CPU
         ))
 
-        // NPU (Hexagon v81 - S24 Ultra has this)
-        val hasNPU = detectHexagonNPU()
+        // NPU (QNN/NNAPI delegate - S24 Ultra has this)
+        val hasNPU = detectQNNNPU()
         devices.add(DeviceInfo(
             type = DeviceType.NPU,
-            name = "Qualcomm Hexagon v81",
+            name = "Qualcomm NPU (QNN/NNAPI)",
             isAvailable = hasNPU,
             memoryMB = 4096,   // Shared with system
-            computeTOPS = NPU_TOPS_HEXAGON_V81
+            computeTOPS = NPU_TOPS_QNN_NNAPI
         ))
 
         // GPU (Adreno 750 - reserved, not used)
@@ -148,7 +148,7 @@ class DeviceAllocationManager {
                 usePreallocatedBuffers = true,
                 estimatedMemoryMB = MEMORY_MISTRAL_7B_INT8
             ).also {
-                Timber.i("✅ LLM_PREFILL → NPU Hexagon v81 (fused kernels, ${MEMORY_MISTRAL_7B_INT8}MB)")
+                Timber.i("✅ LLM_PREFILL → NPU (QNN/NNAPI, fused kernels, ${MEMORY_MISTRAL_7B_INT8}MB)")
             }
 
             ModelType.LLM_DECODE -> AllocationResult(
@@ -170,7 +170,7 @@ class DeviceAllocationManager {
                 usePreallocatedBuffers = true,
                 estimatedMemoryMB = MEMORY_MOBILENET_V3_INT8
             ).also {
-                Timber.i("✅ VISION → NPU Hexagon v81 (fused kernels, ${MEMORY_MOBILENET_V3_INT8}MB)")
+                Timber.i("✅ VISION → NPU (QNN/NNAPI, fused kernels, ${MEMORY_MOBILENET_V3_INT8}MB)")
             }
 
             ModelType.EMBEDDING -> AllocationResult(
@@ -218,9 +218,9 @@ class DeviceAllocationManager {
     }
 
     /**
-     * Detect Qualcomm Hexagon NPU
+     * Detect Qualcomm NPU (QNN/NNAPI delegate)
      */
-    private fun detectHexagonNPU(): Boolean {
+    private fun detectQNNNPU(): Boolean {
         try {
             // Check device model
             val model = Build.MODEL
@@ -235,9 +235,9 @@ class DeviceAllocationManager {
             val hasNPU = isS24Ultra && hasSnapdragon8Gen3
 
             if (hasNPU) {
-                Timber.i("✅ Hexagon v81 NPU detected (S24 Ultra + Snapdragon 8 Gen 3)")
+                Timber.i("✅ NPU detected (S24 Ultra + Snapdragon 8 Gen 3, QNN/NNAPI available)")
             } else {
-                Timber.w("⚠️ Hexagon v81 NPU not detected (device: $model, soc: $soc)")
+                Timber.w("⚠️ NPU (QNN/NNAPI) not detected (device: $model, soc: $soc)")
             }
 
             return hasNPU
@@ -262,7 +262,7 @@ class DeviceAllocationManager {
         |   ├─ LLM Token Decode (streaming)
         |   └─ Auxiliary tasks
         |
-        | NPU (Hexagon v81, ${NPU_TOPS_HEXAGON_V81} TOPS INT8):
+        | NPU (QNN/NNAPI, ${NPU_TOPS_QNN_NNAPI} TOPS INT8):
         |   ├─ Mistral-7B Prefill (INT8, ${MEMORY_MISTRAL_7B_INT8}MB, fused kernels)
         |   └─ MobileNet-v3 Vision (INT8, ${MEMORY_MOBILENET_V3_INT8}MB, fused kernels)
         |

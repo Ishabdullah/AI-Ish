@@ -13,10 +13,10 @@ import timber.log.Timber
 import java.io.File
 
 /**
- * NPUManager - Qualcomm Hexagon v81 NPU interface
+ * NPUManager - Qualcomm NPU interface via QNN/NNAPI delegates
  *
- * Hexagon v81 Specifications (S24 Ultra):
- * - 45 TOPS INT8 performance
+ * NPU Specifications (S24 Ultra):
+ * - 45 TOPS INT8 performance via QNN/NNAPI
  * - Dedicated tensor accelerator
  * - Optimized for INT8 quantized models
  * - Supports fused kernels and preallocated buffers
@@ -44,15 +44,15 @@ class NPUManager {
         }
 
         // NPU configuration
-        private const val NPU_HEXAGON_V81 = "hexagon_v81"
+        private const val NPU_QNN_NNAPI = "qnn_nnapi"
         private const val BUFFER_POOL_SIZE = 10  // Preallocated buffer pool
     }
 
     private var isNPUAvailable = false
     private var isInitialized = false
 
-    // Native methods for Hexagon NPU
-    private external fun nativeDetectHexagonNPU(): Boolean
+    // Native methods for NPU (QNN/NNAPI delegate)
+    private external fun nativeDetectNPU(): Boolean
     private external fun nativeInitializeNPU(): Boolean
     private external fun nativeLoadModelToNPU(
         modelPath: String,
@@ -75,9 +75,9 @@ class NPUManager {
             }
 
             // Detect NPU
-            isNPUAvailable = nativeDetectHexagonNPU()
+            isNPUAvailable = nativeDetectNPU()
             if (!isNPUAvailable) {
-                Timber.w("Hexagon v81 NPU not available on this device")
+                Timber.w("NPU (QNN/NNAPI delegate) not available on this device")
                 return false
             }
 
