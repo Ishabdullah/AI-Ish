@@ -12,14 +12,23 @@
  * GPU BACKEND DETECTION AND MANAGEMENT
  * ================================================================================================
  *
- * This file provides GPU/OpenCL detection and initialization for hardware acceleration.
+ * This file provides GPU acceleration detection and initialization via:
+ * - Vulkan (enabled via GGML_VULKAN in CMakeLists.txt) - for llama.cpp/whisper.cpp
+ * - OpenCL (optional, requires headers to be vendored)
+ * - TensorFlow Lite GPU delegate (TfLiteGpuDelegateOptionsV2)
  *
  * CURRENT STATUS:
  * - CPU detection: FULLY IMPLEMENTED
  * - ARM NEON detection: FULLY IMPLEMENTED
+ * - Vulkan: ENABLED in CMake for GGML backends
  * - OpenCL detection: INTERFACE ONLY (requires OpenCL headers to be vendored)
  *
- * To enable full OpenCL support:
+ * GPU ACCELERATION STRATEGY:
+ * 1. llama.cpp/whisper.cpp: Use Vulkan backend (GGML_VULKAN=ON)
+ * 2. TFLite models: Use TfLiteGpuDelegateV2 with Vulkan/OpenCL
+ * 3. Fallback: Optimized CPU with ARM NEON
+ *
+ * To enable OpenCL support:
  * 1. Vendor OpenCL headers (CL/cl.h, CL/cl_platform.h, etc.)
  * 2. Set ENABLE_OPENCL=ON in CMakeLists.txt
  * 3. Link against libOpenCL.so (available on Qualcomm devices)

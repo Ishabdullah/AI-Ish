@@ -153,12 +153,12 @@ Java_com_ishabdullah_aiish_device_NPUManager_nativeGetNPUInfo(
     LOGW("nativeGetNPUInfo: STUB IMPLEMENTATION");
 
     // TODO: Query NPU capabilities
-    // - Device name (e.g., "Qualcomm Hexagon v81")
+    // - Device name (e.g., "Qualcomm QNN v2.x")
     // - TOPS INT8 performance
     // - Memory capacity
     // - Supported operators
 
-    return env->NewStringUTF("NPU: Qualcomm (QNN/NNAPI delegate) [STUB - not initialized]");
+    return env->NewStringUTF("NPU: Qualcomm QNN/NNAPI delegate [STUB - not initialized]");
 }
 
 /**

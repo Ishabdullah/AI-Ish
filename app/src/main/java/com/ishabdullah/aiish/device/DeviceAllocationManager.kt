@@ -17,8 +17,8 @@ import timber.log.Timber
  *
  * Samsung S24 Ultra Hardware:
  * - CPU: Snapdragon 8 Gen 3 (8 cores: 1x Cortex-X4 @ 3.3GHz, 3x A720 @ 3.2GHz, 4x A520 @ 2.3GHz)
- * - NPU: Qualcomm Hexagon v81 (45 TOPS INT8)
- * - GPU: Adreno 750 (reserved, not used to avoid memory contention)
+ * - NPU: Qualcomm QNN/NNAPI (45 TOPS INT8)
+ * - GPU: Adreno 750 (Vulkan support enabled for GGML backends)
  *
  * Allocation Strategy:
  * ┌─────────────────────────────────────────────────────────────┐
@@ -36,9 +36,10 @@ import timber.log.Timber
  * └─────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────┐
- * │ GPU Adreno 750                                               │
- * │ - RESERVED / IDLE (avoid memory contention)                 │
- * │ - Future use: UI rendering only                             │
+ * │ GPU Adreno 750 (Vulkan backend)                             │
+ * │ - Available for GGML acceleration (llama.cpp/whisper.cpp)   │
+ * │ - Fallback when NPU unavailable                             │
+ * │ - Can be used alongside NPU for parallel workloads          │
  * └─────────────────────────────────────────────────────────────┘
  *
  * Concurrent Execution:
@@ -51,9 +52,9 @@ class DeviceAllocationManager {
 
     enum class DeviceType {
         CPU,      // Snapdragon 8 Gen 3 cores
-        NPU,      // Hexagon v81
-        GPU,      // Adreno 750 (reserved)
-        AUTO      // Automatic selection
+        NPU,      // Qualcomm QNN/NNAPI
+        GPU,      // Adreno 750 (Vulkan backend)
+        AUTO      // Automatic selection based on capabilities
     }
 
     enum class ModelType {
@@ -122,13 +123,13 @@ class DeviceAllocationManager {
             computeTOPS = NPU_TOPS_QNN_NNAPI
         ))
 
-        // GPU (Adreno 750 - reserved, not used)
+        // GPU (Adreno 750 - Vulkan backend enabled)
         devices.add(DeviceInfo(
             type = DeviceType.GPU,
-            name = "Adreno 750",
+            name = "Adreno 750 (Vulkan)",
             isAvailable = true,
-            memoryMB = 0,      // Not allocated
-            computeTOPS = 0    // Not used
+            memoryMB = 2048,   // GPU can use shared memory
+            computeTOPS = 0    // TFLOPS for GPU, not TOPS
         ))
 
         Timber.i("Detected devices: ${devices.map { "${it.name} (available=${it.isAvailable})" }}")
@@ -266,8 +267,8 @@ class DeviceAllocationManager {
         |   ├─ Mistral-7B Prefill (INT8, ${MEMORY_MISTRAL_7B_INT8}MB, fused kernels)
         |   └─ MobileNet-v3 Vision (INT8, ${MEMORY_MOBILENET_V3_INT8}MB, fused kernels)
         |
-        | GPU (Adreno 750):
-        |   └─ RESERVED / IDLE (avoid memory contention)
+        | GPU (Adreno 750, Vulkan):
+        |   └─ Available for GGML acceleration (fallback/parallel workloads)
         |
         | Memory Budget:
         |   Total: ${MEMORY_MISTRAL_7B_INT8 + MEMORY_MOBILENET_V3_INT8 + MEMORY_BGE_FP16 + MEMORY_OVERHEAD}MB / ${TOTAL_MEMORY_BUDGET}MB
