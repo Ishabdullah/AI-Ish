@@ -168,7 +168,7 @@ Java_com_ishabdullah_aiish_ml_LLMInferenceEngine_nativeInitContext(
     ctx_params.n_ctx = contextSize;
     ctx_params.n_threads = 4;  // Optimize for mobile (4-8 cores typical)
     ctx_params.n_threads_batch = 4;
-    ctx_params.flash_attn = LLAMA_FLASH_ATTN_TYPE_AUTO;
+    // Note: flash_attn was removed in recent llama.cpp versions
 
     // Create context
     g_context = llama_init_from_model(g_model, ctx_params);
@@ -213,9 +213,9 @@ Java_com_ishabdullah_aiish_ml_LLMInferenceEngine_nativeTokenize(
     jsize max_tokens = env->GetArrayLength(tokensOut);
     std::vector<llama_token> tokens(max_tokens);
 
-    // Tokenize
+    // Tokenize (API changed: now takes vocab instead of model)
     int n_tokens = llama_tokenize(
-        g_model,
+        llama_model_get_vocab(g_model),
         input,
         strlen(input),
         tokens.data(),
@@ -317,9 +317,9 @@ Java_com_ishabdullah_aiish_ml_LLMInferenceEngine_nativeDecode(
         return env->NewStringUTF("");
     }
 
-    // Convert token to text
+    // Convert token to text (API changed: now takes vocab instead of model)
     char buf[256];
-    int n = llama_token_to_piece(g_model, token, buf, sizeof(buf), 0, false);
+    int n = llama_token_to_piece(llama_model_get_vocab(g_model), token, buf, sizeof(buf), 0, false);
 
     if (n < 0) {
         LOGE("Failed to decode token %d", token);
