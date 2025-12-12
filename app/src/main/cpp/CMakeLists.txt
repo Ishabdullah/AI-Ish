@@ -45,63 +45,72 @@ find_library(log-lib log)
 find_library(android-lib android)
 
 #=============================================================================
-# LLAMA.CPP INTEGRATION
+# LLAMA.CPP & WHISPER.CPP INTEGRATION
+#=============================================================================
+#
+# NOTE: llama.cpp and whisper.cpp integration is currently disabled.
+# The app uses stub implementations in llm_bridge.cpp, whisper_bridge.cpp,
+# and npu_delegate.cpp for development and testing.
+#
+# To enable full AI inference:
+# 1. Clone llama.cpp and whisper.cpp repositories into app/src/main/cpp/
+# 2. Uncomment the add_subdirectory() calls below
+# 3. Uncomment the include directories and library links further down
+# 4. Replace stub implementations with real inference code
+#
 #=============================================================================
 
-# Disable llama.cpp features we don't need for Android
-set(LLAMA_BUILD_TESTS OFF CACHE BOOL "llama: build tests" FORCE)
-set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "llama: build examples" FORCE)
-set(LLAMA_BUILD_SERVER OFF CACHE BOOL "llama: build server" FORCE)
-set(LLAMA_STANDALONE OFF CACHE BOOL "llama: standalone build" FORCE)
-
-# Enable optimizations
-set(GGML_NATIVE OFF CACHE BOOL "ggml: enable -march=native flag" FORCE)
-
-# Disable unnecessary backends
-set(GGML_METAL OFF CACHE BOOL "ggml: use Metal" FORCE)
-set(GGML_CUDA OFF CACHE BOOL "ggml: use CUDA" FORCE)
-set(GGML_VULKAN OFF CACHE BOOL "ggml: use Vulkan" FORCE)
-set(GGML_KOMPUTE OFF CACHE BOOL "ggml: use Kompute" FORCE)
-set(GGML_SYCL OFF CACHE BOOL "ggml: use SYCL" FORCE)
-set(GGML_RPC OFF CACHE BOOL "ggml: use RPC" FORCE)
-
-# Android optimizations
-if(ANDROID)
-    set(GGML_BLAS OFF CACHE BOOL "ggml: use BLAS" FORCE)
-endif()
-
-# Add llama.cpp subdirectory
-add_subdirectory(llama.cpp)
-
-#=============================================================================
-# WHISPER.CPP INTEGRATION
-#=============================================================================
-
-# Disable whisper.cpp features we don't need for Android
-set(WHISPER_BUILD_TESTS OFF CACHE BOOL "whisper: build tests" FORCE)
-set(WHISPER_BUILD_EXAMPLES OFF CACHE BOOL "whisper: build examples" FORCE)
-set(WHISPER_BUILD_SERVER OFF CACHE BOOL "whisper: build server" FORCE)
-set(WHISPER_STANDALONE OFF CACHE BOOL "whisper: standalone build" FORCE)
-
-# Disable extra dependencies
-set(WHISPER_CURL OFF CACHE BOOL "whisper: use libcurl" FORCE)
-set(WHISPER_SDL2 OFF CACHE BOOL "whisper: use SDL2" FORCE)
-set(WHISPER_FFMPEG OFF CACHE BOOL "whisper: use FFmpeg" FORCE)
-set(WHISPER_COREML OFF CACHE BOOL "whisper: use CoreML" FORCE)
-set(WHISPER_OPENVINO OFF CACHE BOOL "whisper: use OpenVINO" FORCE)
-
-# Add whisper.cpp subdirectory
-add_subdirectory(whisper.cpp)
+# # Disable llama.cpp features we don't need for Android
+# set(LLAMA_BUILD_TESTS OFF CACHE BOOL "llama: build tests" FORCE)
+# set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "llama: build examples" FORCE)
+# set(LLAMA_BUILD_SERVER OFF CACHE BOOL "llama: build server" FORCE)
+# set(LLAMA_STANDALONE OFF CACHE BOOL "llama: standalone build" FORCE)
+#
+# # Enable optimizations
+# set(GGML_NATIVE OFF CACHE BOOL "ggml: enable -march=native flag" FORCE)
+#
+# # Disable unnecessary backends
+# set(GGML_METAL OFF CACHE BOOL "ggml: use Metal" FORCE)
+# set(GGML_CUDA OFF CACHE BOOL "ggml: use CUDA" FORCE)
+# set(GGML_VULKAN OFF CACHE BOOL "ggml: use Vulkan" FORCE)
+# set(GGML_KOMPUTE OFF CACHE BOOL "ggml: use Kompute" FORCE)
+# set(GGML_SYCL OFF CACHE BOOL "ggml: use SYCL" FORCE)
+# set(GGML_RPC OFF CACHE BOOL "ggml: use RPC" FORCE)
+#
+# # Android optimizations
+# if(ANDROID)
+#     set(GGML_BLAS OFF CACHE BOOL "ggml: use BLAS" FORCE)
+# endif()
+#
+# # Add llama.cpp subdirectory
+# add_subdirectory(llama.cpp)
+#
+# # Disable whisper.cpp features we don't need for Android
+# set(WHISPER_BUILD_TESTS OFF CACHE BOOL "whisper: build tests" FORCE)
+# set(WHISPER_BUILD_EXAMPLES OFF CACHE BOOL "whisper: build examples" FORCE)
+# set(WHISPER_BUILD_SERVER OFF CACHE BOOL "whisper: build server" FORCE)
+# set(WHISPER_STANDALONE OFF CACHE BOOL "whisper: standalone build" FORCE)
+#
+# # Disable extra dependencies
+# set(WHISPER_CURL OFF CACHE BOOL "whisper: use libcurl" FORCE)
+# set(WHISPER_SDL2 OFF CACHE BOOL "whisper: use SDL2" FORCE)
+# set(WHISPER_FFMPEG OFF CACHE BOOL "whisper: use FFmpeg" FORCE)
+# set(WHISPER_COREML OFF CACHE BOOL "whisper: use CoreML" FORCE)
+# set(WHISPER_OPENVINO OFF CACHE BOOL "whisper: use OpenVINO" FORCE)
+#
+# # Add whisper.cpp subdirectory
+# add_subdirectory(whisper.cpp)
 
 #=============================================================================
 # AIISH NATIVE LIBRARY (JNI Bridge)
 #=============================================================================
 
-# Source files
+# Source files (stub implementations for development/testing)
 set(SOURCES
     llm_bridge.cpp
     gpu_backend.cpp
     whisper_bridge.cpp
+    npu_delegate.cpp
 )
 
 # Create shared library
@@ -110,17 +119,19 @@ add_library(aiish_native SHARED ${SOURCES})
 # Include directories
 target_include_directories(aiish_native PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/whisper.cpp/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/whisper.cpp/src
+    # When llama.cpp and whisper.cpp are added, uncomment these:
+    # ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/include
+    # ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/src
+    # ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/include
+    # ${CMAKE_CURRENT_SOURCE_DIR}/whisper.cpp/include
+    # ${CMAKE_CURRENT_SOURCE_DIR}/whisper.cpp/src
 )
 
 # Link libraries
 target_link_libraries(aiish_native
-    llama
-    whisper
+    # When llama.cpp and whisper.cpp are added, uncomment these:
+    # llama
+    # whisper
     ${log-lib}
     ${android-lib}
 )
