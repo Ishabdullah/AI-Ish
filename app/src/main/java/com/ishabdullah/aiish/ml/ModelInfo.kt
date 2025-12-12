@@ -142,42 +142,56 @@ object ModelCatalog {
         type = ModelType.VISION
     )
 
-    val WHISPER_TINY = ModelInfo(
-        id = "whisper_tiny",
+    /**
+     * Vosk Small EN-US - Speech Recognition (Fast)
+     * Device: CPU
+     * Size: ~40MB (compressed)
+     * Performance: 5-10x realtime on mobile
+     * Language: English (US)
+     */
+    val VOSK_SMALL_EN = ModelInfo(
+        id = "vosk_small_en_us",
         name = "Speech Recognition (Fast)",
-        description = "Whisper-Tiny int8 • 5-10x realtime on mobile",
-        sizeMB = 145,
-        downloadUrl = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
-        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum ggml-tiny.bin)
-        sha256 = "placeholder_sha256_whisper_tiny",
-        filename = "whisper-tiny-int8.bin",
+        description = "Vosk Small EN-US • 5-10x realtime • Offline STT",
+        sizeMB = 40,
+        downloadUrl = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum vosk-model-small-en-us-0.15.zip)
+        sha256 = "placeholder_sha256_vosk_small",
+        filename = "vosk-model-small-en-us-0.15.zip",
         type = ModelType.AUDIO
     )
 
-    val WHISPER_BASE = ModelInfo(
-        id = "whisper_base",
+    /**
+     * Vosk EN-US - Speech Recognition (Accurate)
+     * Device: CPU
+     * Size: ~1.8GB (compressed)
+     * Performance: High accuracy, 3-5x realtime
+     * Language: English (US)
+     */
+    val VOSK_EN = ModelInfo(
+        id = "vosk_en_us",
         name = "Speech Recognition (Accurate)",
-        description = "Whisper-Base int8 • Better accuracy, 3-5x realtime",
-        sizeMB = 290,
-        downloadUrl = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
-        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum ggml-base.bin)
-        sha256 = "placeholder_sha256_whisper_base",
-        filename = "whisper-base-int8.bin",
+        description = "Vosk EN-US 0.22 • High accuracy • Offline STT",
+        sizeMB = 1800,
+        downloadUrl = "https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip",
+        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum vosk-model-en-us-0.22.zip)
+        sha256 = "placeholder_sha256_vosk_en",
+        filename = "vosk-model-en-us-0.22.zip",
         type = ModelType.AUDIO
     )
 
     /**
      * Get all available models
-     * Production models (Mistral-7B, MobileNet-v3, BGE) are prioritized
+     * Production models (Mistral-7B, MobileNet-v3, BGE, Vosk) are prioritized
      */
     fun getAll() = listOf(
         // Production models (recommended for S24 Ultra)
         MISTRAL_7B_INT8,
         MOBILENET_V3_INT8,
         BGE_SMALL_INT8,
-        WHISPER_TINY,
-        WHISPER_BASE,
-        // Legacy models (deprecated, kept for compatibility)
+        VOSK_SMALL_EN,
+        VOSK_EN,
+        // Alternative vision models
         MOONDREAM2,
         QWEN2_VL
     )
@@ -189,7 +203,7 @@ object ModelCatalog {
         MISTRAL_7B_INT8,
         MOBILENET_V3_INT8,
         BGE_SMALL_INT8,
-        WHISPER_TINY
+        VOSK_SMALL_EN  // Small Vosk model for fast STT
     )
 }
 
