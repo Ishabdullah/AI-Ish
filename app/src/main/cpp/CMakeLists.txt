@@ -62,11 +62,11 @@ set(LLAMA_STANDALONE OFF CACHE BOOL "llama: standalone build" FORCE)
 # Enable optimizations
 set(GGML_NATIVE OFF CACHE BOOL "ggml: enable -march=native flag" FORCE)
 
-# Backend configuration - CPU is always enabled, Vulkan for GPU acceleration
+# Backend configuration - CPU only for Android (Vulkan headers not available in NDK)
 set(GGML_CPU ON CACHE BOOL "ggml: use CPU backend" FORCE)
 set(GGML_METAL OFF CACHE BOOL "ggml: use Metal" FORCE)
 set(GGML_CUDA OFF CACHE BOOL "ggml: use CUDA" FORCE)
-set(GGML_VULKAN ON CACHE BOOL "ggml: use Vulkan for GPU" FORCE)
+set(GGML_VULKAN OFF CACHE BOOL "ggml: use Vulkan" FORCE)
 set(GGML_KOMPUTE OFF CACHE BOOL "ggml: use Kompute" FORCE)
 set(GGML_SYCL OFF CACHE BOOL "ggml: use SYCL" FORCE)
 set(GGML_RPC OFF CACHE BOOL "ggml: use RPC" FORCE)
