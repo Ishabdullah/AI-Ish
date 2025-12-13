@@ -13,11 +13,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.ishabdullah.aiish.data.local.ConversationDatabase
 import com.ishabdullah.aiish.data.local.preferences.PreferencesManager
+import com.ishabdullah.aiish.data.repository.ChatRepository
+import com.ishabdullah.aiish.ml.LLMInferenceEngine
 import com.ishabdullah.aiish.ui.screens.*
 import com.ishabdullah.aiish.ui.theme.AIIshTheme
 import com.ishabdullah.aiish.ui.viewmodels.ChatViewModel
@@ -73,9 +78,28 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AiIshNavigation() {
     val navController = rememberNavController()
-    val chatViewModel: ChatViewModel = viewModel()
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
+    val application = context.applicationContext as Application // Get Application instance
+
+    // Instantiate ChatRepository dependencies
+    val conversationDatabase = remember { ConversationDatabase.getDatabase(application) }
+    val chatRepository = remember { ChatRepository(conversationDatabase.conversationDao()) }
+
+    // Instantiate LLMInferenceEngine
+    val llmInferenceEngine = remember { LLMInferenceEngine() }
+
+    val chatViewModel: ChatViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
+                    @Suppress("UNCHECKED_CAST")
+                    return ChatViewModel(application, chatRepository, llmInferenceEngine) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
 
     val hasCompletedOnboarding by preferencesManager.hasCompletedOnboarding.collectAsState(initial = false)
 
@@ -114,7 +138,8 @@ fun AiIshNavigation() {
         }
         composable("settings") {
             SettingsScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                preferencesManager = preferencesManager
             )
         }
     }

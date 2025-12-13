@@ -96,6 +96,12 @@ jobs:
       - name: 🏗️ Build Debug APK
         run: ./gradlew assembleDebug --stacktrace --no-daemon
 
+      - name: 🧪 Run Unit Tests
+        run: ./gradlew test --stacktrace --no-daemon
+
+      - name: 🧪 Run Instrumented Tests
+        run: ./gradlew connectedAndroidTest --stacktrace --no-daemon
+
       - name: 🚀 Build Release APK (Production)
         run: ./gradlew assembleRelease --stacktrace --no-daemon
 

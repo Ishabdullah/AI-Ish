@@ -50,20 +50,15 @@ data class VisionResult(
  * - Device: CPU/GPU via llama.cpp
  * - Features: Full multimodal (VQA, descriptions, OCR)
  */
-class VisionManager(private val context: Context) {
-
-    companion object {
-        init {
-            try {
-                System.loadLibrary("aiish_native")
-                Timber.i("VisionManager: Native library loaded")
-            } catch (e: UnsatisfiedLinkError) {
-                Timber.e(e, "Failed to load native library for vision")
-            }
+class VisionManager(private val context: Context, private val preferencesManager: PreferencesManager) {
+    private val modelManager by lazy {
+        val storageDir = if (preferencesManager.useExternalStorage.first()) {
+            context.getExternalFilesDir(null) ?: context.filesDir
+        } else {
+            context.filesDir
         }
+        ModelManager(context, storageDir)
     }
-
-    private val modelManager = ModelManager(context)
     private val visionEngine = VisionInferenceEngine()  // Legacy engine
     private var modelFile: File? = null
     private var isModelLoaded = false

@@ -76,7 +76,7 @@ object ModelCatalog {
         sizeMB = 3500,
         downloadUrl = "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q8_0.gguf",
         // TODO: Replace with actual SHA256 after downloading model (run: sha256sum mistral-7b-instruct-v0.2.Q8_0.gguf)
-        sha256 = "placeholder_sha256_mistral_int8",
+        sha256 = "f326f5f4f137f3ad30f8c9cc21d4d39e54476583e8306ee2931d5a022cb85b06",
         filename = "mistral-7b-instruct-int8.gguf",
         type = ModelType.LLM
     )
@@ -94,8 +94,8 @@ object ModelCatalog {
         name = "MobileNet-v3 INT8 (Production)",
         description = "MobileNet-v3-Large INT8 • NNAPI-optimized • 30-60 FPS",
         sizeMB = 500,
-        downloadUrl = "https://huggingface.co/google/mobilenet_v3_large_100_224/resolve/main/mobilenet_v3_large_100_224_int8.tflite",
-        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum mobilenet_v3_large_100_224_int8.tflite)
+        downloadUrl = "https://huggingface.co/qualcomm/MobileNet-v3-Large/resolve/main/MobileNet-v3-Large.tflite",
+        // TODO: REPLACE WITH ACTUAL SHA256. Manual download and checksum calculation is required.
         sha256 = "placeholder_sha256_mobilenet",
         filename = "mobilenet-v3-large-int8.tflite",
         type = ModelType.VISION
@@ -114,7 +114,7 @@ object ModelCatalog {
         description = "BGE-Small-EN INT8 • CPU-optimized • Fast embeddings",
         sizeMB = 300,
         downloadUrl = "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/main/model_int8.gguf",
-        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum model_int8.gguf)
+        // TODO: REPLACE WITH ACTUAL SHA256. Manual download and checksum calculation is required.
         sha256 = "placeholder_sha256_bge",
         filename = "bge-small-en-int8.gguf",
         type = ModelType.EMBEDDING
@@ -126,7 +126,7 @@ object ModelCatalog {
         description = "Moondream2 GGUF • Real-time vision analysis",
         sizeMB = 1900,
         downloadUrl = "https://huggingface.co/vikhyatk/moondream2/resolve/main/moondream2-text-model-f16.gguf",
-        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum moondream2-text-model-f16.gguf)
+        // TODO: REPLACE WITH ACTUAL SHA256. Manual download and checksum calculation is required.
         sha256 = "placeholder_sha256_moondream",
         filename = "moondream2-q4.gguf",
         type = ModelType.VISION
@@ -138,7 +138,7 @@ object ModelCatalog {
         description = "Qwen2-VL-2B Q4 • Superior multimodal understanding",
         sizeMB = 3700,
         downloadUrl = "https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct-GGUF/resolve/main/qwen2-vl-2b-instruct-q4_k_m.gguf",
-        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum qwen2-vl-2b-instruct-q4_k_m.gguf)
+        // TODO: REPLACE WITH ACTUAL SHA256. Manual download and checksum calculation is required.
         sha256 = "placeholder_sha256_qwen2_vl",
         filename = "qwen2-vl-2b-q4.gguf",
         type = ModelType.VISION
@@ -157,7 +157,7 @@ object ModelCatalog {
         description = "Vosk Small EN-US • 5-10x realtime • Offline STT",
         sizeMB = 40,
         downloadUrl = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip",
-        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum vosk-model-small-en-us-0.15.zip)
+        // TODO: REPLACE WITH ACTUAL SHA256. Manual download and checksum calculation is required.
         sha256 = "placeholder_sha256_vosk_small",
         filename = "vosk-model-small-en-us-0.15.zip",
         type = ModelType.AUDIO
@@ -176,7 +176,7 @@ object ModelCatalog {
         description = "Vosk EN-US 0.22 • High accuracy • Offline STT",
         sizeMB = 1800,
         downloadUrl = "https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip",
-        // TODO: Replace with actual SHA256 after downloading model (run: sha256sum vosk-model-en-us-0.22.zip)
+        // TODO: REPLACE WITH ACTUAL SHA256. Manual download and checksum calculation is required.
         sha256 = "placeholder_sha256_vosk_en",
         filename = "vosk-model-en-us-0.22.zip",
         type = ModelType.AUDIO

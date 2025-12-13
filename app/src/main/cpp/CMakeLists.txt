@@ -31,9 +31,9 @@ endif()
 
 # OpenCL support - Headers vendored in opencl/ directory
 # Enable for GPU acceleration on Qualcomm Adreno, ARM Mali, PowerVR
-set(ENABLE_OPENCL ON)
+option(AIISH_ENABLE_OPENCL "Enable OpenCL GPU backend" OFF)
 
-if(ENABLE_OPENCL)
+if(AIISH_ENABLE_OPENCL)
     add_definitions(-DENABLE_OPENCL)
     # Note: We link against libOpenCL.so dynamically at runtime
     # The library is available on most Android devices with GPU
@@ -86,9 +86,13 @@ add_subdirectory(llama.cpp llama-build)
 # Source files (llama.cpp for LLM, Vosk for STT via Kotlin/JNI)
 set(SOURCES
     llm_bridge.cpp
-    gpu_backend.cpp
     npu_delegate.cpp
 )
+
+# Include GPU backend only when OpenCL is enabled
+if(AIISH_ENABLE_OPENCL)
+    list(APPEND SOURCES gpu_backend.cpp)
+endif()
 
 # Create shared library
 add_library(aiish_native SHARED ${SOURCES})
@@ -110,6 +114,11 @@ target_link_libraries(aiish_native
 )
 
 # Link OpenCL when enabled
-if(ENABLE_OPENCL)
-    # target_link_libraries(aiish_native ${opencl-lib})
+if(AIISH_ENABLE_OPENCL)
+    # Create imported library target for OpenCL
+    add_library(OpenCL SHARED IMPORTED)
+    set_target_properties(OpenCL PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}/libOpenCL.so"
+    )
+    target_link_libraries(aiish_native PRIVATE OpenCL)
 endif()

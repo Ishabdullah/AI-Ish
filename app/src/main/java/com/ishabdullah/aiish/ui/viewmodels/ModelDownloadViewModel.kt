@@ -39,7 +39,14 @@ data class ModelDownloadState(
 
 class ModelDownloadViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val modelManager = ModelManager(application)
+    private val modelManager by lazy {
+        val storageDir = if (preferencesManager.useExternalStorage.first()) {
+            application.getExternalFilesDir(null) ?: application.filesDir
+        } else {
+            application.filesDir
+        }
+        ModelManager(application, storageDir)
+    }
     private val preferencesManager = PreferencesManager(application)
 
     private val _state = MutableStateFlow(ModelDownloadState())

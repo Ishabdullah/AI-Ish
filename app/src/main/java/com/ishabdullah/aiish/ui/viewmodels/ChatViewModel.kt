@@ -4,23 +4,35 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ishabdullah.aiish.audio.TTSManager
+import com.ishabdullah.aiish.data.repository.ChatRepository // Import ChatRepository
 import com.ishabdullah.aiish.domain.models.Message
 import com.ishabdullah.aiish.domain.models.MessageRole
 import com.ishabdullah.aiish.ml.LLMInferenceEngine
 import com.ishabdullah.aiish.ml.TokenStreamHandler
+import com.ishabdullah.aiish.audio.TranscriptionBroadcaster // New import
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
  * Chat ViewModel - Manages chat conversation state with real LLM inference and TTS
  */
-class ChatViewModel(application: Application) : AndroidViewModel(application) {
+class ChatViewModel(
+    application: Application,
+    private val chatRepository: ChatRepository, // Inject ChatRepository
+    private val llmInferenceEngine: LLMInferenceEngine // Inject LLMInferenceEngine
+) : AndroidViewModel(application) {
 
-    private val _messages = MutableStateFlow<List<Message>>(emptyList())
-    val messages: StateFlow<List<Message>> = _messages.asStateFlow()
+    // Chat messages (from repository)
+    val messages: StateFlow<List<Message>> = chatRepository.getAllMessages.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -28,18 +40,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _shouldOpenCamera = MutableStateFlow(false)
     val shouldOpenCamera: StateFlow<Boolean> = _shouldOpenCamera.asStateFlow()
 
-    // LLM inference components
-    private val llmEngine = LLMInferenceEngine()
+    // LLM inference components (llmInferenceEngine is now injected)
     private val streamHandler = TokenStreamHandler()
-
-    // TTS component
-    private val ttsManager = TTSManager(application)
-    private val _ttsEnabled = MutableStateFlow(false)
-    val ttsEnabled: StateFlow<Boolean> = _ttsEnabled.asStateFlow()
-
-    // Streaming state
-    private val _streamingMessage = MutableStateFlow<String?>(null)
-    val streamingMessage: StateFlow<String?> = _streamingMessage.asStateFlow()
 
     init {
         Timber.d("ChatViewModel initialized")
@@ -51,6 +53,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 Timber.i("TTS initialized successfully")
             } else {
                 Timber.w("TTS initialization failed")
+            }
+        }
+
+        // Collect transcriptions from ContinuousListeningService
+        viewModelScope.launch {
+            TranscriptionBroadcaster.transcriptionFlow.collect { transcription ->
+                Timber.d("Received transcription: $transcription")
+                if (transcription.isNotBlank()) {
+                    sendMessage(transcription) // Process as user message
+                }
             }
         }
     }
@@ -72,7 +84,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     content = content,
                     role = MessageRole.USER
                 )
-                _messages.value = _messages.value + userMessage
+                chatRepository.insertMessage(userMessage) // Use repository to insert
 
                 _isLoading.value = true
                 _streamingMessage.value = ""
@@ -89,7 +101,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     content = aiResponse,
                     role = MessageRole.ASSISTANT
                 )
-                _messages.value = _messages.value + assistantMessage
+                chatRepository.insertMessage(assistantMessage) // Use repository to insert
 
                 // Speak response if TTS is enabled
                 if (_ttsEnabled.value && aiResponse.isNotBlank()) {
@@ -102,7 +114,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     content = "Sorry, I encountered an error: ${e.message}",
                     role = MessageRole.ASSISTANT
                 )
-                _messages.value = _messages.value + errorMessage
+                chatRepository.insertMessage(errorMessage) // Use repository to insert
 
                 // Speak error if TTS is enabled
                 if (_ttsEnabled.value) {
@@ -228,7 +240,9 @@ Assistant:"""
     }
 
     fun clearMessages() {
-        _messages.value = emptyList()
+        viewModelScope.launch {
+            chatRepository.clearAllMessages() // Use repository to clear
+        }
     }
 
     // =========================================================================

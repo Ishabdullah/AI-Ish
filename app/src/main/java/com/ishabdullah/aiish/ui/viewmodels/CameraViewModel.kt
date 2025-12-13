@@ -29,7 +29,8 @@ data class CameraState(
 
 class CameraViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val visionManager = VisionManager(application)
+    private val preferencesManager = PreferencesManager(application)
+    private val visionManager = VisionManager(application, preferencesManager)
 
     private val _state = MutableStateFlow(CameraState())
     val state: StateFlow<CameraState> = _state.asStateFlow()

@@ -56,9 +56,22 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    val useExternalStorage: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEY_USE_EXTERNAL_STORAGE] ?: false
+        }
+
+    suspend fun setUseExternalStorage(useExternal: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_USE_EXTERNAL_STORAGE] = useExternal
+        }
+    }
+
+
     companion object {
         private val KEY_ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
         private val KEY_SELECTED_MODEL = stringPreferencesKey("selected_model_id")
         private val KEY_HAS_VISION = booleanPreferencesKey("has_vision_model")
+        private val KEY_USE_EXTERNAL_STORAGE = booleanPreferencesKey("use_external_storage")
     }
 }

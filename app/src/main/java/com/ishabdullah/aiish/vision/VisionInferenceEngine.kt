@@ -144,7 +144,7 @@ class VisionInferenceEngine {
             VisionInferenceResult(
                 success = true,
                 description = description.trim(),
-                confidence = 0.85f, // TODO: Extract from model logits
+                confidence = 0.85f, // TODO: Extract from native model logits (requires native layer modification)
                 processingTimeMs = processingTime
             )
 

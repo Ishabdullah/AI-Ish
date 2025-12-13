@@ -35,7 +35,7 @@ data class DownloadProgress(
         get() = if (totalBytes > 0) ((bytesDownloaded.toFloat() / totalBytes) * 100).roundToInt() else 0
 }
 
-class ModelManager(private val context: Context) {
+class ModelManager(private val context: Context, private val storageDirectory: File) {
 
     companion object {
         private const val CONNECT_TIMEOUT_SEC = 30L
@@ -52,7 +52,7 @@ class ModelManager(private val context: Context) {
         .retryOnConnectionFailure(true)
         .build()
 
-    private val modelsDir: File = File(context.filesDir, "models").apply { mkdirs() }
+    private val modelsDir: File = File(storageDirectory, "models").apply { mkdirs() }
 
     private val _downloadProgress = MutableStateFlow<DownloadProgress?>(null)
     val downloadProgress: StateFlow<DownloadProgress?> = _downloadProgress.asStateFlow()

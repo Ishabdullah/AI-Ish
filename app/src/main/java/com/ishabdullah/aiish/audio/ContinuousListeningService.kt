@@ -17,7 +17,9 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.ishabdullah.aiish.MainActivity // New import
 import android.os.IBinder
+import com.ishabdullah.aiish.audio.TranscriptionBroadcaster // New import
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -205,8 +207,7 @@ class ContinuousListeningService : Service() {
                 updateNotification("Heard: ${result.text.take(50)}...")
                 Timber.d("Transcription: ${result.text}")
 
-                // TODO: Send transcription to chat or command processor
-                // broadcastTranscription(result.text)
+                TranscriptionBroadcaster.emitTranscription(result.text)
             }
 
         } catch (e: Exception) {
@@ -220,12 +221,14 @@ class ContinuousListeningService : Service() {
     private fun createNotification(contentText: String): Notification {
         createNotificationChannel()
 
-        // TODO: Replace with actual MainActivity intent
+        val notificationIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
-            Intent(),
-            PendingIntent.FLAG_IMMUTABLE
+            notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

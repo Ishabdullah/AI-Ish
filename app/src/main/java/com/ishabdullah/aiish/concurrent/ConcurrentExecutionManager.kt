@@ -50,7 +50,8 @@ class ConcurrentExecutionManager(private val context: Context) {
 
     // Model engines
     private val llmEngine = LLMInferenceEngine()
-    private val visionManager = VisionManager(context)
+    private val preferencesManager = PreferencesManager(context)
+    private val visionManager = VisionManager(context, preferencesManager)
     private val embeddingManager = EmbeddingManager()
     private val deviceAllocator = DeviceAllocationManager()
 
