@@ -317,7 +317,7 @@ AI-Ish is designed to be a comprehensive AI assistant that runs entirely on your
    - Risk: May not work on devices with limited internal storage
    - Priority: Medium
 
-3. **GPU Compute Utilization**
+3. **GPU Compute Utilization** (*CEO Note: ignor GPU acceleration)
    - OpenCL headers vendored, but LLM uses CPU
    - This is intentional: transformers are more efficient on CPU
    - Risk: None (design decision)
@@ -366,11 +366,11 @@ AI-Ish is designed to be a comprehensive AI assistant that runs entirely on your
 
 **Goal:** Enable NPU, GPU, and optimized CPU inference
 
-1. Integrate Qualcomm Hexagon SDK
-2. Enable OpenCL for GPU acceleration
+1. Integrate Qualcomm Hexagon SDK (*CEO Note: replace with NNAPI)
+2. Enable OpenCL for GPU acceleration (*CEO Note: only for fallback)
 3. Implement thread affinity for CPU cores
 4. Profile and optimize inference performance
-5. Reach target: 25-35 tokens/sec on S24 Ultra
+5. Reach target: 25-35 tokens/sec on S24 Ultra (*CEO Note: Realistically 10-20 tokens/sec)
 
 **Success Criteria:** Inference speed matches design specifications
 
