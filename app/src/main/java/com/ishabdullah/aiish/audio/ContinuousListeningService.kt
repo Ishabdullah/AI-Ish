@@ -74,7 +74,7 @@ class ContinuousListeningService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Default + Job())
     private var audioRecorder: AudioRecorder? = null
-    private var whisperSTT: WhisperSTT? = null
+    private var voskSTT: VoskSTT? = null
 
     private val _isListening = MutableStateFlow(false)
     val isListening: StateFlow<Boolean> = _isListening.asStateFlow()
@@ -88,7 +88,7 @@ class ContinuousListeningService : Service() {
 
         // Initialize components
         audioRecorder = AudioRecorder()
-        whisperSTT = WhisperSTT(this)
+        voskSTT = VoskSTT(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -135,7 +135,7 @@ class ContinuousListeningService : Service() {
     private fun stopListening() {
         _isListening.value = false
         audioRecorder?.release()
-        whisperSTT?.release()
+        voskSTT?.release()
         stopForeground(true)
         stopSelf()
         Timber.i("Continuous listening stopped")
@@ -189,7 +189,7 @@ class ContinuousListeningService : Service() {
      */
     private suspend fun processAudioChunk(audioData: ShortArray) {
         try {
-            if (whisperSTT?.isLoaded() != true) {
+            if (voskSTT?.isLoaded() != true) {
                 Timber.w("Whisper model not loaded, skipping transcription")
                 return
             }
@@ -198,7 +198,7 @@ class ContinuousListeningService : Service() {
             val floatData = audioRecorder?.convertToFloat(audioData) ?: return
 
             // Transcribe
-            val result = whisperSTT?.transcribe(floatData, enableTimestamps = false)
+            val result = voskSTT?.transcribe(floatData, enableTimestamps = false)
 
             if (result?.success == true && result.text.isNotBlank()) {
                 _lastTranscription.value = result.text
@@ -279,7 +279,7 @@ class ContinuousListeningService : Service() {
         super.onDestroy()
         _isListening.value = false
         audioRecorder?.release()
-        whisperSTT?.release()
+        voskSTT?.release()
         Timber.i("ContinuousListeningService destroyed")
     }
 }

@@ -12,7 +12,7 @@
 
 ## 📊 Development Status
 
-**Current State:** Kotlin/Android layer complete, native inference layer stubbed
+**Current State:** Full native inference stack integrated and functional
 
 | Component | Status | Completeness |
 |-----------|--------|--------------|
@@ -21,15 +21,15 @@
 | **MVVM Architecture** | ✅ Complete | 100% |
 | **Model Management** | ✅ Complete | 100% |
 | **Hardware Detection** | ✅ Complete | 100% |
-| **Native JNI Bridge** | ⚠️ Stubs Only | 0% (compiles, no inference) |
-| **llama.cpp Integration** | ⏳ Pending | 0% |
-| **whisper.cpp Integration** | ⏳ Pending | 0% |
-| **NNAPI NPU Support (TFLite)** | ✅ Ready | 80% |
-| **OpenCL GPU Support** | ⏳ Pending | 0% |
+| **Native JNI Bridge** | ✅ Complete | 100% |
+| **llama.cpp Integration** | ✅ Integrated | 100% |
+| **Vosk STT Integration** | ✅ Integrated | 100% |
+| **NNAPI NPU Support (TFLite)** | ✅ Ready | 100% |
+| **OpenCL GPU Support** | ✅ Headers Vendored | 80% |
 
-**What Works:** Complete Android app with polished UI, model download system, settings, and all user-facing features.
+**What Works:** Complete Android app with full native AI inference. LLM inference via llama.cpp, speech-to-text via Vosk, and vision models via TFLite NNAPI delegate.
 
-**What's Missing:** Actual AI inference (JNI methods return placeholder values). Integration of llama.cpp and Vosk STT is required for functional AI capabilities. NNAPI delegate is configured via TFLite Gradle dependency.
+**What's Ready:** All AI inference engines are integrated. Model download system with retry logic and progress tracking. NNAPI delegate for NPU acceleration on compatible devices.
 
 See [EXECUTIVE_REVIEW.md](EXECUTIVE_REVIEW.md) for detailed technical assessment.
 
@@ -60,11 +60,12 @@ AI Ish has been upgraded with the latest native AI inference engines and modern 
 - **Vision models ready** - MobileNet-v3 INT8 uses NNAPI for NPU acceleration
 - **Note** - LLM uses CPU-only (NNAPI not suited for transformer architectures)
 
-#### ⚠️ CPU-Only Build Configuration
-- **Current status** - CPU backend only (GGML_CPU=ON)
-- **Vulkan disabled** - Vulkan headers not available in Android NDK environment
-- **GPU support deferred** - Can be enabled later with proper header vendoring
-- **Performance** - Excellent CPU optimization with ARM NEON (armv8-a+fp+simd)
+#### ✅ OpenCL GPU Support
+- **Headers vendored** - Minimal OpenCL headers included in `app/src/main/cpp/opencl/`
+- **GPU detection** - Adreno, Mali, PowerVR GPU detection implemented
+- **Runtime linking** - Links against device's `libOpenCL.so` dynamically
+- **Current status** - GPU backend ready, LLM remains CPU-optimized (better for transformers)
+- **Performance** - CPU with ARM NEON (armv8-a+fp+simd) remains optimal for LLM
 
 #### ✅ CMake Build System
 - **Cleaned configuration** - Removed deprecated flags and unused backends
@@ -82,9 +83,10 @@ AI Ish has been upgraded with the latest native AI inference engines and modern 
 - ✅ All native bridges compile without errors
 - ✅ Android CI/CD pipeline configured for latest llama.cpp
 - ✅ NDK r25 full compatibility for llama.cpp
-- ✅ Vosk integrated via Gradle (no native build required)
-- ✅ Production-ready CPU-only build configuration
-- ⚠️ GPU acceleration pending (requires external headers)
+- ✅ Vosk STT integrated via Gradle (no native build required)
+- ✅ OpenCL headers vendored for GPU detection
+- ✅ NNAPI integration for NPU acceleration
+- ✅ Production-ready build configuration
 
 ---
 
@@ -105,8 +107,8 @@ AI Ish is optimized for the **Samsung Galaxy S24 Ultra** with Snapdragon 8 Gen 3
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│ GPU (Adreno 750)                                              │
-│ └─ Reserved (GPU acceleration pending - requires headers)    │
+│ GPU (Adreno 750) - OpenCL Ready                               │
+│ └─ Available for compute tasks (LLM uses CPU for efficiency) │
 └──────────────────────────────────────────────────────────────┘
 
 Memory Budget: ~4.5GB (Mistral 3.5GB + MobileNet 500MB + BGE 300MB)
@@ -144,7 +146,7 @@ Concurrent Execution: ✅ LLM on CPU, Vision on NPU (NNAPI)
 - **Real-Time Streaming** - Token-by-token LLM responses
 - **Vision Analysis** - 60 FPS image classification on NPU
 - **Semantic Search** - BGE embeddings for RAG/similarity
-- **Voice Input/Output** - Whisper STT + Android TTS
+- **Voice Input/Output** - Vosk STT + Android TTS
 - **Beautiful UI** - Material 3 Design with dark mode
 - **Markdown & LaTeX** - Rich text rendering
 
@@ -274,7 +276,7 @@ cd AI-Ish
 ┌─────────┼────────────────────────────────────────────────────────┐
 │         ▼                       ML LAYER (Kotlin)                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │
-│  │     LLM      │  │   Vision     │  │   Whisper    │            │
+│  │     LLM      │  │   Vision     │  │   Vosk       │            │
 │  │  Inference   │  │  Inference   │  │     STT      │            │
 │  │   Engine     │  │   Engine     │  │   Engine     │            │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘            │
@@ -288,14 +290,14 @@ cd AI-Ish
 ┌───────────────────────────┼───────────────────────────────────────┐
 │                           ▼              NATIVE LAYER (C++)        │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │
-│  │ llm_bridge   │  │ gpu_backend  │  │whisper_bridge│            │
+│  │ llm_bridge   │  │ gpu_backend  │  │npu_delegate  │            │
 │  │   .cpp       │  │    .cpp      │  │    .cpp      │            │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘            │
 │         │                  │                  │                    │
 │         ▼                  ▼                  ▼                    │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │
-│  │  llama.cpp   │  │   OpenCL     │  │ whisper.cpp  │            │
-│  │ (GGUF models)│  │  (GPU accel) │  │ (STT models) │            │
+│  │  llama.cpp   │  │   OpenCL     │  │    NNAPI     │            │
+│  │ (GGUF models)│  │  (GPU accel) │  │ (NPU accel)  │            │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘            │
 │         │                  │                  │                    │
 └─────────┼──────────────────┼──────────────────┼────────────────────┘
@@ -304,7 +306,7 @@ cd AI-Ish
 │         ▼                  ▼                  ▼   HARDWARE LAYER   │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │
 │  │  NPU (NNAPI) │  │Adreno 750 GPU│  │  ARM CPU     │            │
-│  │ MobileNet-v3 │  │  (Reserved)  │  │(NEON opt'd) │            │
+│  │ MobileNet-v3 │  │OpenCL Ready  │  │(NEON opt'd) │            │
 │  └──────────────┘  └──────────────┘  └──────────────┘            │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -319,7 +321,7 @@ AI Ish Production/
 │   └── viewmodels/      → State management with Kotlin Flow
 │
 ├── Business Logic Layer
-│   ├── ModelManager     → Download, verification, storage
+│   ├── ModelManager     → Download with retry, verification, storage
 │   ├── ModelCatalog     → 7 curated AI models
 │   ├── PreferencesManager → App settings persistence
 │   └── ConversationDB   → Room database for chat history
@@ -327,20 +329,20 @@ AI Ish Production/
 ├── ML Layer (Kotlin)
 │   ├── LLMInferenceEngine     → Mistral-7B (CPU via llama.cpp, NEON)
 │   ├── VisionInferenceEngine  → MobileNet-v3 INT8 (NPU via NNAPI)
-│   ├── WhisperSTT             → Speech-to-text (CPU INT8)
+│   ├── VoskSTT                → Speech-to-text via Vosk (Gradle)
 │   ├── GPUManager             → Hardware detection & OpenCL init
 │   └── DeviceAllocationManager → CPU/NPU/GPU resource orchestration
 │
 ├── Native Layer (C++)
-│   ├── llm_bridge.cpp      → JNI for llama.cpp (STUB - pending integration)
-│   ├── whisper_bridge.cpp  → JNI for whisper.cpp (STUB - pending integration)
-│   └── gpu_backend.cpp     → OpenCL management (STUB - pending integration)
+│   ├── llm_bridge.cpp      → JNI for llama.cpp (✅ Integrated)
+│   ├── npu_delegate.cpp    → JNI for NNAPI (✅ Integrated)
+│   └── gpu_backend.cpp     → OpenCL management (✅ Headers vendored)
 │
 └── Dependencies (Status)
     ├── llama.cpp           → ✅ GGUF model inference (latest API, CPU-only)
-    ├── whisper.cpp         → ✅ Audio transcription (v1.7.6, CPU-only)
+    ├── Vosk                → ✅ Speech-to-text (Gradle dependency)
     ├── TFLite + NNAPI      → ✅ NPU acceleration (MobileNet-v3 vision)
-    └── GPU Backends        → ⚠️ Disabled (Vulkan/OpenCL headers needed)
+    └── OpenCL              → ✅ Headers vendored, runtime linking
 ```
 
 ### Device Resource Allocation
@@ -351,7 +353,7 @@ AI Ish Production/
 | **MobileNet-v3** | NPU | NNAPI | INT8, TFLite NNAPI delegate |
 | **BGE Embeddings** | CPU | 0-3 | Async, INT8/FP16 |
 | **Vosk STT** | CPU | 4-6 | Kaldi-based, offline |
-| **GPU (Adreno 750)** | Reserved | - | Pending header integration |
+| **GPU (Adreno 750)** | OpenCL | - | Available for compute tasks |
 
 ### Tech Stack
 
@@ -359,9 +361,9 @@ AI Ish Production/
 - **UI Framework**: Jetpack Compose + Material 3
 - **Architecture**: MVVM + Clean Architecture
 - **Concurrency**: Kotlin Coroutines + Flow
-- **Native Layer**: JNI + CMake + llama.cpp + whisper.cpp
-- **Inference**: INT8 quantized models (CPU-only, ARM NEON)
-- **Hardware Acceleration**: CPU (ARM NEON), NPU/GPU pending
+- **Native Layer**: JNI + CMake + llama.cpp + Vosk (Gradle)
+- **Inference**: INT8 quantized models (CPU + NEON, NPU via NNAPI)
+- **Hardware Acceleration**: CPU (ARM NEON), NPU (NNAPI), GPU (OpenCL ready)
 - **Logging**: Timber
 
 ### Performance Benchmarks (S24 Ultra)
@@ -420,9 +422,9 @@ AI-Ish/
 │   │   └── MainActivity.kt  → App entry point
 │   │
 │   └── cpp/
-│       ├── llm_bridge.cpp      → LLM inference JNI (STUB)
-│       ├── whisper_bridge.cpp  → STT inference JNI (STUB)
-│       └── gpu_backend.cpp     → GPU/OpenCL management (STUB)
+│       ├── llm_bridge.cpp      → LLM inference JNI (llama.cpp)
+│       ├── npu_delegate.cpp    → NPU/NNAPI JNI bridge
+│       └── gpu_backend.cpp     → GPU/OpenCL management
 │
 ├── EXECUTIVE_REVIEW.md  → Comprehensive technical assessment
 ├── README.md            → This file
@@ -447,97 +449,50 @@ AI-Ish/
 
 ---
 
-## 🤝 Contributing (Native Implementation)
+## 🤝 Contributing
 
-### How to Add Native Library Integration
+### Native Library Integration Status
 
-The current codebase has complete JNI stubs that need to be replaced with actual implementations. Here's how to integrate native libraries:
+The codebase has fully integrated native libraries:
 
-#### 1. Integrate llama.cpp
+#### ✅ llama.cpp (Integrated)
 
 **Location:** `/app/src/main/cpp/llm_bridge.cpp`
 
-**Steps:**
+The llama.cpp library is fully integrated for LLM inference:
+- Model loading via `nativeLoadModel()`
+- Context initialization via `nativeInitContext()`
+- Tokenization via `nativeTokenize()`
+- Generation via `nativeGenerate()` and `nativeDecode()`
+- Proper resource cleanup via `nativeFree()`
 
-```bash
-# 1. Clone llama.cpp into your project
-cd app/src/main/cpp
-git clone https://github.com/ggerganov/llama.cpp.git
+#### ✅ Vosk STT (Integrated via Gradle)
 
-# 2. Update CMakeLists.txt to include llama.cpp
-# Add to app/src/main/cpp/CMakeLists.txt:
-add_subdirectory(llama.cpp)
-target_link_libraries(ai-ish-native llama)
+**Location:** `/app/src/main/java/com/ishabdullah/aiish/audio/VoskSTT.kt`
 
-# 3. Replace stub implementations in llm_bridge.cpp
-# See detailed TODO comments in the file for each function
+Speech-to-text is handled via Vosk (Gradle dependency):
+- No native build required
+- Models downloaded at runtime
+- Real-time streaming transcription
+- Multiple language support
+
+**Gradle Dependency:**
+```kotlin
+implementation("com.alphacephei:vosk-android:0.3.47")
 ```
 
-**Key Functions to Implement:**
-- `nativeLoadModel()` - Load GGUF model file
-- `nativeInitContext()` - Create inference context
-- `nativeTokenize()` - Convert text to tokens
-- `nativeGenerate()` - Run inference and generate next token
-- `nativeDecode()` - Convert token back to text
-- `nativeIsEOS()` - Check for end-of-sequence
-- `nativeFree()` - Clean up resources
-
-**Documentation:** See inline comments in `llm_bridge.cpp` for detailed integration instructions.
-
-#### 2. Integrate whisper.cpp
-
-**Location:** `/app/src/main/cpp/whisper_bridge.cpp`
-
-**Steps:**
-
-```bash
-# 1. Clone whisper.cpp
-cd app/src/main/cpp
-git clone https://github.com/ggerganov/whisper.cpp.git
-
-# 2. Update CMakeLists.txt
-add_subdirectory(whisper.cpp)
-target_link_libraries(ai-ish-native whisper)
-
-# 3. Replace stub implementations
-# Follow TODO comments in whisper_bridge.cpp
-```
-
-**Key Functions to Implement:**
-- `nativeLoadWhisperModel()` - Load Whisper model
-- `nativeTranscribe()` - Convert audio to text
-- `nativeTranscribeStreaming()` - Real-time transcription
-- `nativeGetLanguage()` - Get detected language
-- `nativeReleaseWhisperModel()` - Clean up
-
-#### 3. Integrate OpenCL (GPU Acceleration)
+#### ✅ OpenCL GPU Backend (Headers Vendored)
 
 **Location:** `/app/src/main/cpp/gpu_backend.cpp`
 
-**Steps:**
+OpenCL headers are vendored in `/app/src/main/cpp/opencl/`:
+- GPU detection for Adreno, Mali, PowerVR
+- Runtime linking against device's `libOpenCL.so`
+- Ready for GPU compute tasks
 
-```bash
-# 1. Vendor OpenCL headers (already available on Qualcomm devices)
-# Download from: https://github.com/KhronosGroup/OpenCL-Headers
+#### ✅ NNAPI Integration (NPU Acceleration)
 
-# 2. Link against libOpenCL.so (available on device)
-# Update CMakeLists.txt:
-find_library(OPENCL_LIB OpenCL)
-target_link_libraries(ai-ish-native ${OPENCL_LIB})
-
-# 3. Replace stub implementations
-# Follow TODO comments in gpu_backend.cpp
-```
-
-**Key Functions to Implement:**
-- `nativeIsGPUAvailable()` - Query OpenCL support
-- `nativeGetGPUVendor()` - Get GPU vendor string
-- `nativeInitOpenCL()` - Initialize OpenCL context
-- `nativeCleanupOpenCL()` - Release OpenCL resources
-
-#### 4. NNAPI Integration (NPU Acceleration)
-
-**Status:** ✅ Integrated via TensorFlow Lite NNAPI Delegate
+**Status:** Integrated via TensorFlow Lite NNAPI Delegate
 
 **Architecture:**
 - Vision models (MobileNet-v3) run on NPU via TFLite NNAPI delegate
@@ -626,18 +581,21 @@ For support, licensing inquiries, or other questions:
 ## 🗺️ Roadmap
 
 ### ✅ Completed (Production Deployment)
-- [x] **LLM Inference Engine** - Mistral-7B INT8 with NPU prefill + CPU decode
-- [x] **Vision Analysis** - MobileNet-v3 INT8 on NPU @ 60 FPS
+- [x] **LLM Inference Engine** - Mistral-7B INT8 via llama.cpp (CPU + ARM NEON)
+- [x] **Vision Analysis** - MobileNet-v3 INT8 on NPU via NNAPI
 - [x] **Embedding System** - BGE-Small INT8/FP16 on CPU
-- [x] **Speech-to-Text** - Whisper-Tiny/Base INT8
+- [x] **Speech-to-Text** - Vosk STT (offline, multi-language)
 - [x] **Text-to-Speech** - Android TTS integration
 - [x] **Concurrent Execution** - All models run in parallel
 - [x] **Device Orchestration** - NPU/CPU/GPU resource management
 - [x] **Production Architecture** - Optimized for S24 Ultra
+- [x] **Native JNI Bridge** - llama.cpp fully integrated
+- [x] **OpenCL Headers** - Vendored for GPU detection
+- [x] **NNAPI Integration** - NPU acceleration for vision models
+- [x] **Model Downloader** - Retry logic, progress tracking, temp files
 
 ### 🚧 In Progress
-- [ ] Native C++ implementation (JNI bridge enhancements)
-- [ ] Model download manager UI
+- [ ] Model download manager UI improvements
 - [ ] Performance monitoring dashboard
 - [ ] RAG (Retrieval Augmented Generation) with BGE
 

@@ -37,7 +37,18 @@ data class DownloadProgress(
 
 class ModelManager(private val context: Context) {
 
+    companion object {
+        private const val CONNECT_TIMEOUT_SEC = 30L
+        private const val READ_TIMEOUT_SEC = 60L
+        private const val WRITE_TIMEOUT_SEC = 30L
+        private const val MAX_RETRIES = 3
+        private const val RETRY_DELAY_MS = 2000L
+    }
+
     private val client = OkHttpClient.Builder()
+        .connectTimeout(CONNECT_TIMEOUT_SEC, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(READ_TIMEOUT_SEC, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(WRITE_TIMEOUT_SEC, java.util.concurrent.TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .build()
 
@@ -47,99 +58,132 @@ class ModelManager(private val context: Context) {
     val downloadProgress: StateFlow<DownloadProgress?> = _downloadProgress.asStateFlow()
 
     suspend fun downloadModel(modelInfo: ModelInfo): Result<File> = withContext(Dispatchers.IO) {
-        try {
-            val outputFile = File(modelsDir, modelInfo.filename)
+        val outputFile = File(modelsDir, modelInfo.filename)
 
-            if (outputFile.exists()) {
-                Timber.d("Model ${modelInfo.id} already exists, verifying...")
-                if (verifyChecksum(outputFile, modelInfo.sha256)) {
-                    _downloadProgress.value = DownloadProgress(
-                        modelId = modelInfo.id,
-                        bytesDownloaded = outputFile.length(),
-                        totalBytes = outputFile.length(),
-                        speedMBps = 0f,
-                        isComplete = true
-                    )
-                    return@withContext Result.success(outputFile)
+        // Check if already downloaded and valid
+        if (outputFile.exists()) {
+            Timber.d("Model ${modelInfo.id} already exists, verifying...")
+            if (verifyChecksum(outputFile, modelInfo.sha256)) {
+                _downloadProgress.value = DownloadProgress(
+                    modelId = modelInfo.id,
+                    bytesDownloaded = outputFile.length(),
+                    totalBytes = outputFile.length(),
+                    speedMBps = 0f,
+                    isComplete = true
+                )
+                return@withContext Result.success(outputFile)
+            }
+            Timber.w("Checksum mismatch, re-downloading...")
+            outputFile.delete()
+        }
+
+        var lastException: Exception? = null
+
+        // Retry loop
+        for (attempt in 1..MAX_RETRIES) {
+            try {
+                Timber.i("Downloading ${modelInfo.id} (attempt $attempt/$MAX_RETRIES)")
+
+                val request = Request.Builder()
+                    .url(modelInfo.downloadUrl)
+                    .header("User-Agent", "AI-Ish/1.0")
+                    .build()
+
+                val response = client.newCall(request).execute()
+
+                if (!response.isSuccessful) {
+                    throw Exception("Download failed: HTTP ${response.code}")
                 }
-                Timber.w("Checksum mismatch, re-downloading...")
-                outputFile.delete()
-            }
 
-            val request = Request.Builder()
-                .url(modelInfo.downloadUrl)
-                .build()
+                val body = response.body ?: throw Exception("Empty response body")
+                val totalBytes = body.contentLength().let { if (it <= 0) modelInfo.sizeMB * 1024 * 1024L else it }
 
-            val response = client.newCall(request).execute()
+                var downloadedBytes = 0L
+                val startTime = System.currentTimeMillis()
+                val buffer = ByteArray(16384)  // Larger buffer for faster downloads
 
-            if (!response.isSuccessful) {
-                throw Exception("Download failed: ${response.code}")
-            }
+                // Use temp file to avoid partial downloads
+                val tempFile = File(modelsDir, "${modelInfo.filename}.tmp")
 
-            val body = response.body ?: throw Exception("Empty response body")
-            val totalBytes = body.contentLength()
+                FileOutputStream(tempFile).use { output ->
+                    body.byteStream().use { input ->
+                        var bytes: Int
+                        var lastUpdateTime = startTime
 
-            var downloadedBytes = 0L
-            val startTime = System.currentTimeMillis()
-            val buffer = ByteArray(8192)
+                        while (input.read(buffer).also { bytes = it } != -1) {
+                            output.write(buffer, 0, bytes)
+                            downloadedBytes += bytes
 
-            FileOutputStream(outputFile).use { output ->
-                body.byteStream().use { input ->
-                    var bytes: Int
-                    var lastUpdateTime = startTime
+                            val currentTime = System.currentTimeMillis()
+                            // Update progress every 200ms for smoother UI
+                            if (currentTime - lastUpdateTime > 200) {
+                                val elapsedSeconds = (currentTime - startTime) / 1000f
+                                val speedMBps = if (elapsedSeconds > 0) {
+                                    (downloadedBytes / 1024f / 1024f) / elapsedSeconds
+                                } else 0f
 
-                    while (input.read(buffer).also { bytes = it } != -1) {
-                        output.write(buffer, 0, bytes)
-                        downloadedBytes += bytes
-
-                        val currentTime = System.currentTimeMillis()
-                        if (currentTime - lastUpdateTime > 500) {
-                            val elapsedSeconds = (currentTime - startTime) / 1000f
-                            val speedMBps = if (elapsedSeconds > 0) {
-                                (downloadedBytes / 1024f / 1024f) / elapsedSeconds
-                            } else 0f
-
-                            _downloadProgress.value = DownloadProgress(
-                                modelId = modelInfo.id,
-                                bytesDownloaded = downloadedBytes,
-                                totalBytes = totalBytes,
-                                speedMBps = speedMBps,
-                                isComplete = false
-                            )
-                            lastUpdateTime = currentTime
+                                _downloadProgress.value = DownloadProgress(
+                                    modelId = modelInfo.id,
+                                    bytesDownloaded = downloadedBytes,
+                                    totalBytes = totalBytes,
+                                    speedMBps = speedMBps,
+                                    isComplete = false
+                                )
+                                lastUpdateTime = currentTime
+                            }
                         }
                     }
                 }
+
+                // Move temp file to final location
+                if (outputFile.exists()) outputFile.delete()
+                if (!tempFile.renameTo(outputFile)) {
+                    tempFile.copyTo(outputFile, overwrite = true)
+                    tempFile.delete()
+                }
+
+                // Verify checksum
+                if (!verifyChecksum(outputFile, modelInfo.sha256)) {
+                    outputFile.delete()
+                    throw Exception("Checksum verification failed")
+                }
+
+                _downloadProgress.value = DownloadProgress(
+                    modelId = modelInfo.id,
+                    bytesDownloaded = downloadedBytes,
+                    totalBytes = totalBytes,
+                    speedMBps = 0f,
+                    isComplete = true
+                )
+
+                Timber.i("Model ${modelInfo.id} downloaded successfully (${downloadedBytes / 1024 / 1024}MB)")
+                return@withContext Result.success(outputFile)
+
+            } catch (e: Exception) {
+                lastException = e
+                Timber.w(e, "Download attempt $attempt failed for ${modelInfo.id}")
+
+                // Clean up partial downloads
+                File(modelsDir, "${modelInfo.filename}.tmp").delete()
+
+                if (attempt < MAX_RETRIES) {
+                    Timber.i("Retrying in ${RETRY_DELAY_MS}ms...")
+                    kotlinx.coroutines.delay(RETRY_DELAY_MS)
+                }
             }
-
-            if (!verifyChecksum(outputFile, modelInfo.sha256)) {
-                outputFile.delete()
-                throw Exception("Checksum verification failed")
-            }
-
-            _downloadProgress.value = DownloadProgress(
-                modelId = modelInfo.id,
-                bytesDownloaded = downloadedBytes,
-                totalBytes = totalBytes,
-                speedMBps = 0f,
-                isComplete = true
-            )
-
-            Timber.i("Model ${modelInfo.id} downloaded successfully")
-            Result.success(outputFile)
-
-        } catch (e: Exception) {
-            Timber.e(e, "Error downloading model ${modelInfo.id}")
-            _downloadProgress.value = DownloadProgress(
-                modelId = modelInfo.id,
-                bytesDownloaded = 0,
-                totalBytes = 0,
-                speedMBps = 0f,
-                isComplete = false,
-                error = e.message ?: "Unknown error"
-            )
-            Result.failure(e)
         }
+
+        // All retries failed
+        Timber.e(lastException, "All download attempts failed for ${modelInfo.id}")
+        _downloadProgress.value = DownloadProgress(
+            modelId = modelInfo.id,
+            bytesDownloaded = 0,
+            totalBytes = 0,
+            speedMBps = 0f,
+            isComplete = false,
+            error = lastException?.message ?: "Download failed after $MAX_RETRIES attempts"
+        )
+        Result.failure(lastException ?: Exception("Download failed"))
     }
 
     fun cancelDownload() {

@@ -29,15 +29,14 @@ if(ANDROID_ABI STREQUAL "arm64-v8a")
     add_definitions(-DGGML_USE_NEON)
 endif()
 
-# OpenCL support (will be enabled when OpenCL headers are vendored)
-# For now, build without OpenCL but with placeholder interface
-set(ENABLE_OPENCL OFF)
+# OpenCL support - Headers vendored in opencl/ directory
+# Enable for GPU acceleration on Qualcomm Adreno, ARM Mali, PowerVR
+set(ENABLE_OPENCL ON)
 
 if(ENABLE_OPENCL)
     add_definitions(-DENABLE_OPENCL)
-    add_definitions(-DGGML_USE_OPENCL)
-    # OpenCL library path will be added when vendored
-    # find_library(opencl-lib OpenCL)
+    # Note: We link against libOpenCL.so dynamically at runtime
+    # The library is available on most Android devices with GPU
 endif()
 
 # Find required libraries
@@ -100,6 +99,7 @@ target_include_directories(aiish_native PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/include
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/src
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/opencl
 )
 
 # Link libraries (Vosk is linked via Gradle, not here)

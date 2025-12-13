@@ -13,25 +13,24 @@
  * ================================================================================================
  *
  * This file provides GPU acceleration detection and initialization via:
- * - Vulkan (enabled via GGML_VULKAN in CMakeLists.txt) - for llama.cpp/whisper.cpp
- * - OpenCL (optional, requires headers to be vendored)
+ * - OpenCL (for GPU compute on Qualcomm Adreno, ARM Mali, PowerVR)
  * - TensorFlow Lite GPU delegate (TfLiteGpuDelegateOptionsV2)
  *
  * CURRENT STATUS:
  * - CPU detection: FULLY IMPLEMENTED
  * - ARM NEON detection: FULLY IMPLEMENTED
- * - Vulkan: ENABLED in CMake for GGML backends
- * - OpenCL detection: INTERFACE ONLY (requires OpenCL headers to be vendored)
+ * - OpenCL: INTERFACE READY (headers vendored in opencl/)
  *
  * GPU ACCELERATION STRATEGY:
- * 1. llama.cpp/whisper.cpp: Use Vulkan backend (GGML_VULKAN=ON)
- * 2. TFLite models: Use TfLiteGpuDelegateV2 with Vulkan/OpenCL
- * 3. Fallback: Optimized CPU with ARM NEON
+ * 1. LLM (llama.cpp): CPU with ARM NEON (GPU not beneficial for transformers)
+ * 2. Vision (TFLite MobileNet): NNAPI delegate or GPU delegate
+ * 3. STT (Vosk): CPU only
+ * 4. Fallback: Optimized CPU with ARM NEON
  *
- * To enable OpenCL support:
- * 1. Vendor OpenCL headers (CL/cl.h, CL/cl_platform.h, etc.)
- * 2. Set ENABLE_OPENCL=ON in CMakeLists.txt
- * 3. Link against libOpenCL.so (available on Qualcomm devices)
+ * OpenCL Support:
+ * - Headers vendored in opencl/ directory
+ * - Set ENABLE_OPENCL=ON in CMakeLists.txt to enable
+ * - Runtime links against libOpenCL.so (available on Qualcomm/ARM devices)
  *
  * ================================================================================================
  */

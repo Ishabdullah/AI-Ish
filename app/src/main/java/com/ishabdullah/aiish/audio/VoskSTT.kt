@@ -23,13 +23,14 @@ import timber.log.Timber
 import java.io.File
 
 /**
- * WhisperSTT - Speech-to-Text using Vosk library
+ * VoskSTT - Speech-to-Text using Vosk library
  *
- * Switched from whisper.cpp to Vosk for:
- * - Better Android compatibility (no native build issues)
- * - Smaller models (50MB vs 145MB)
- * - Proven offline STT
- * - Easy integration via Gradle
+ * Vosk provides:
+ * - Native Android compatibility via Gradle dependency
+ * - Compact models (40MB-1.8GB)
+ * - Proven offline STT with high accuracy
+ * - Real-time streaming transcription
+ * - Multiple language support
  *
  * Supports:
  * - Real-time transcription with streaming
@@ -37,10 +38,10 @@ import java.io.File
  * - Offline processing
  * - Punctuation and capitalization
  */
-class WhisperSTT(private val context: Context) {
+class VoskSTT(private val context: Context) {
 
     companion object {
-        // Model sizes (Vosk models are smaller than Whisper)
+        // Model sizes
         const val MODEL_SMALL = "vosk-model-small-en-us-0.15"  // ~40MB, fast
         const val MODEL_EN = "vosk-model-en-us-0.22"           // ~1.8GB, high accuracy
 
