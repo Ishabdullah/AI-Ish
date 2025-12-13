@@ -25,6 +25,12 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: 🤖 Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          ndk-version: 25.1.8937393
+
       - name: 🔧 Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -34,10 +40,15 @@ jobs:
           cd app/src/main/cpp
 
           # Clone llama.cpp (lightweight depth=1 clone)
-          if [ -d "llama.cpp" ]; then
-            echo "⚠️ llama.cpp already exists, removing..."
+          if [ -d "llama.cpp" ] && [ -z "$(ls -A llama.cpp)" ]; then
+            echo "⚠️ llama.cpp directory is empty, cloning..."
             rm -rf llama.cpp
+          elif [ -d "llama.cpp" ] && [ -f "llama.cpp/CMakeLists.txt" ]; then
+            echo "✅ llama.cpp already exists and is complete"
+            cd ../../../..
+            exit 0
           fi
+          
           git clone --depth 1 https://github.com/ggerganov/llama.cpp.git
           echo "✅ llama.cpp cloned ($(du -sh llama.cpp | cut -f1))"
 
@@ -67,9 +78,20 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', '**/build.gradle.kts') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      - name: 📦 Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ANDROID_SDK_ROOT }}/platforms
+            ${{ env.ANDROID_SDK_ROOT }}/build-tools
+            ${{ env.ANDROID_SDK_ROOT }}/ndk
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('app/build.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
 
       - name: 🏗️ Build Debug APK
         run: ./gradlew assembleDebug --stacktrace --no-daemon
