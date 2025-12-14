@@ -46,6 +46,9 @@ class ChatViewModelTest {
     @Mock
     private lateinit var llmInferenceEngine: LLMInferenceEngine
 
+    @Mock
+    private lateinit var ttsManager: com.ishabdullah.aiish.audio.TTSManager
+
     private lateinit var chatRepository: ChatRepository
     private lateinit var chatViewModel: ChatViewModel
 
@@ -62,7 +65,7 @@ class ChatViewModelTest {
         chatRepository = ChatRepository(conversationDao)
 
         // Initialize ChatViewModel with mocked dependencies
-        chatViewModel = ChatViewModel(application, chatRepository, llmInferenceEngine)
+        chatViewModel = ChatViewModel(application, chatRepository, llmInferenceEngine, ttsManager)
     }
 
     @After
