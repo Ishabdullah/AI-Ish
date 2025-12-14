@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
@@ -53,7 +54,7 @@ data class VisionResult(
  */
 class VisionManager(private val context: Context, private val preferencesManager: PreferencesManager) {
     private val modelManager by lazy {
-        val storageDir = if (preferencesManager.useExternalStorage.first()) {
+        val storageDir = if (runBlocking { preferencesManager.useExternalStorage.first() }) {
             context.getExternalFilesDir(null) ?: context.filesDir
         } else {
             context.filesDir
