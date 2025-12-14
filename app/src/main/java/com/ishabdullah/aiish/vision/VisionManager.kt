@@ -15,6 +15,7 @@ import com.ishabdullah.aiish.device.DeviceAllocationManager
 import com.ishabdullah.aiish.device.NPUManager
 import com.ishabdullah.aiish.ml.ModelCatalog
 import com.ishabdullah.aiish.ml.ModelManager
+import com.ishabdullah.aiish.data.local.preferences.PreferencesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

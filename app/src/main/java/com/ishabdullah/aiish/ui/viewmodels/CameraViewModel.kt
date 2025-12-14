@@ -13,6 +13,7 @@ import android.app.Application
 import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ishabdullah.aiish.data.local.preferences.PreferencesManager
 import com.ishabdullah.aiish.vision.VisionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

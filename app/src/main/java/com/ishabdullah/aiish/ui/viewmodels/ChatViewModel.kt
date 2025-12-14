@@ -133,7 +133,7 @@ class ChatViewModel(
                 }
             } finally {
                 _isLoading.value = false
-                _streamingMessage.value = null
+                _streamingMessage.value = ""
             }
         }
     }

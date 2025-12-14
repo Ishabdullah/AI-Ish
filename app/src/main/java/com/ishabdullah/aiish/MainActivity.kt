@@ -82,7 +82,7 @@ fun AiIshNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
-    val application = context.applicationContext as Application // Get Application instance
+    val application = context.applicationContext as android.app.Application // Get Application instance
 
     // Instantiate ChatRepository dependencies
     val conversationDatabase = remember { ConversationDatabase.getDatabase(application) }
