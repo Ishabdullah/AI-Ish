@@ -24,15 +24,14 @@ import timber.log.Timber
 class ChatViewModel(
     application: Application,
     private val chatRepository: ChatRepository, // Inject ChatRepository
-    private val llmInferenceEngine: LLMInferenceEngine // Inject LLMInferenceEngine
+    private val llmEngine: LLMInferenceEngine // Inject LLMInferenceEngine
 ) : AndroidViewModel(application) {
 
-    // Chat messages (from repository)
-    val messages: StateFlow<List<Message>> = chatRepository.getAllMessages.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    private val ttsManager = TTSManager(application)
+
+    // Chat messages (internal mutable state)
+    private val _messages = MutableStateFlow<List<Message>>(emptyList())
+    val messages: StateFlow<List<Message>> = _messages.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -40,11 +39,24 @@ class ChatViewModel(
     private val _shouldOpenCamera = MutableStateFlow(false)
     val shouldOpenCamera: StateFlow<Boolean> = _shouldOpenCamera.asStateFlow()
 
+    private val _streamingMessage = MutableStateFlow<String?>(null)
+    val streamingMessage: StateFlow<String?> = _streamingMessage.asStateFlow()
+
+    private val _ttsEnabled = MutableStateFlow(false)
+    val ttsEnabled: StateFlow<Boolean> = _ttsEnabled.asStateFlow()
+
     // LLM inference components (llmInferenceEngine is now injected)
     private val streamHandler = TokenStreamHandler()
 
     init {
         Timber.d("ChatViewModel initialized")
+
+        // Collect messages from repository into _messages
+        viewModelScope.launch {
+            chatRepository.getAllMessages.collect {
+                _messages.value = it
+            }
+        }
 
         // Initialize TTS
         viewModelScope.launch {
