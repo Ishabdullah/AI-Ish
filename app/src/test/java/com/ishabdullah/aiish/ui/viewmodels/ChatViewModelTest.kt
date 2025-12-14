@@ -18,6 +18,7 @@ import com.ishabdullah.aiish.data.local.ConversationDao
 import com.ishabdullah.aiish.data.repository.ChatRepository
 import com.ishabdullah.aiish.ml.LLMInferenceEngine
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.any
 import com.ishabdullah.aiish.domain.models.Message
 import com.ishabdullah.aiish.domain.models.MessageRole
 import kotlinx.coroutines.flow.flowOf
@@ -78,7 +79,7 @@ class ChatViewModelTest {
         assert(chatViewModel.messages.first().isEmpty())
         assert(!chatViewModel.isLoading.value)
         assert(!chatViewModel.shouldOpenCamera.value)
-        assert(chatViewModel.streamingMessage.value == null)
+        assert(chatViewModel.streamingMessage.value.isEmpty())
     }
 
     @Test
@@ -88,7 +89,7 @@ class ChatViewModelTest {
         // Mock LLM to return a simple response
         `when`(llmInferenceEngine.isLoaded()).thenReturn(true)
         `when`(llmInferenceEngine.generateStream(
-            prompt = any(), // Use Mockito's any() for arbitrary prompt matching
+            prompt = any(),
             maxTokens = any(),
             temperature = any(),
             topP = any(),
@@ -115,7 +116,4 @@ class ChatViewModelTest {
         // Verify that clearAllMessages was called on the mock conversationDao
         org.mockito.Mockito.verify(conversationDao).clearAllConversations()
     }
-
-    // Helper for Mockito any()
-    private fun <T> any(): T = org.mockito.Mockito.any()
 }
