@@ -106,17 +106,7 @@ class VisionManager(private val context: Context, private val preferencesManager
             Timber.i("═══════════════════════════════════════════════════════════")
 
             // Determine storage directory for ModelManager
-            val useExternalStorage = preferencesManager.useExternalStorage.first()
-            val storageDir = if (useExternalStorage) {
-                context.getExternalFilesDir(null) ?: context.filesDir
-            } else {
-                context.filesDir
-            }
-            modelManager = ModelManager(context, storageDir)
-
-            // Determine storage directory for ModelManager
-            val useExternalStorage = preferencesManager.useExternalStorage.first()
-            val storageDir = if (useExternalStorage) {
+            val storageDir = if (preferencesManager.useExternalStorage.first()) {
                 context.getExternalFilesDir(null) ?: context.filesDir
             } else {
                 context.filesDir
@@ -240,7 +230,7 @@ class VisionManager(private val context: Context, private val preferencesManager
 
             if (!isModelLoaded) {
                 // Auto-initialize based on available models
-                val productionAvailable = modelManager.isModelDownloaded(ModelCatalog.MOBILENET_V3_INT8)
+                val productionAvailable = modelManager?.isModelDownloaded(ModelCatalog.MOBILENET_V3_INT8) ?: false
                 val initialized = if (productionAvailable) {
                     initializeProduction()
                 } else {
