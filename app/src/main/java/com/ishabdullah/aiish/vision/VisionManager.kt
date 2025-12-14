@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -53,14 +54,7 @@ data class VisionResult(
  * - Features: Full multimodal (VQA, descriptions, OCR)
  */
 class VisionManager(private val context: Context, private val preferencesManager: PreferencesManager) {
-    private val modelManager by lazy {
-        val storageDir = if (runBlocking { preferencesManager.useExternalStorage.first() }) {
-            context.getExternalFilesDir(null) ?: context.filesDir
-        } else {
-            context.filesDir
-        }
-        ModelManager(context, storageDir)
-    }
+    private var modelManager: ModelManager? = null
     private val visionEngine = VisionInferenceEngine()  // Legacy engine
     private var modelFile: File? = null
     private var isModelLoaded = false
@@ -111,7 +105,25 @@ class VisionManager(private val context: Context, private val preferencesManager
             Timber.i("Loading MobileNet-v3 INT8 (PRODUCTION MODE)")
             Timber.i("═══════════════════════════════════════════════════════════")
 
-            modelFile = modelManager.getModelFile(ModelCatalog.MOBILENET_V3_INT8)
+            // Determine storage directory for ModelManager
+            val useExternalStorage = preferencesManager.useExternalStorage.first()
+            val storageDir = if (useExternalStorage) {
+                context.getExternalFilesDir(null) ?: context.filesDir
+            } else {
+                context.filesDir
+            }
+            modelManager = ModelManager(context, storageDir)
+
+            // Determine storage directory for ModelManager
+            val useExternalStorage = preferencesManager.useExternalStorage.first()
+            val storageDir = if (useExternalStorage) {
+                context.getExternalFilesDir(null) ?: context.filesDir
+            } else {
+                context.filesDir
+            }
+            modelManager = ModelManager(context, storageDir)
+
+            modelFile = modelManager!!.getModelFile(ModelCatalog.MOBILENET_V3_INT8)
             if (modelFile == null || !modelFile!!.exists()) {
                 Timber.w("MobileNet-v3 model not downloaded")
                 return@withContext false
@@ -179,7 +191,15 @@ class VisionManager(private val context: Context, private val preferencesManager
 
             Timber.i("Loading vision model (LEGACY mode)")
 
-            modelFile = modelManager.getModelFile(ModelCatalog.MOONDREAM2)
+            // Determine storage directory for ModelManager
+            val useExternalStorage = preferencesManager.useExternalStorage.first()
+            val storageDir = if (useExternalStorage) {
+                context.getExternalFilesDir(null) ?: context.filesDir
+            } else {
+                context.filesDir
+            }
+            modelManager = ModelManager(context, storageDir)
+            modelFile = modelManager!!.getModelFile(ModelCatalog.MOONDREAM2)
             if (modelFile == null || !modelFile!!.exists()) {
                 Timber.w("Vision model not downloaded")
                 return@withContext false
@@ -427,8 +447,18 @@ class VisionManager(private val context: Context, private val preferencesManager
     }
 
     fun isAvailable(): Boolean {
-        val production = modelManager.isModelDownloaded(ModelCatalog.MOBILENET_V3_INT8)
-        val legacy = modelManager.isModelDownloaded(ModelCatalog.MOONDREAM2)
+        // Initialize modelManager if it hasn't been yet
+        if (modelManager == null) {
+            val useExternalStorage = runBlocking { preferencesManager.useExternalStorage.first() }
+            val storageDir = if (useExternalStorage) {
+                context.getExternalFilesDir(null) ?: context.filesDir
+            } else {
+                context.filesDir
+            }
+            modelManager = ModelManager(context, storageDir)
+        }
+        val production = modelManager!!.isModelDownloaded(ModelCatalog.MOBILENET_V3_INT8)
+        val legacy = modelManager!!.isModelDownloaded(ModelCatalog.MOONDREAM2)
         return production || legacy
     }
 
