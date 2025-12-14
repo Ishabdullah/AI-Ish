@@ -24,10 +24,9 @@ import timber.log.Timber
 class ChatViewModel(
     application: Application,
     private val chatRepository: ChatRepository, // Inject ChatRepository
-    private val llmEngine: LLMInferenceEngine // Inject LLMInferenceEngine
+    private val llmEngine: LLMInferenceEngine, // Inject LLMInferenceEngine
+    private val ttsManager: TTSManager
 ) : AndroidViewModel(application) {
-
-    private val ttsManager = TTSManager(application)
 
     // Chat messages (internal mutable state)
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
@@ -39,7 +38,7 @@ class ChatViewModel(
     private val _shouldOpenCamera = MutableStateFlow(false)
     val shouldOpenCamera: StateFlow<Boolean> = _shouldOpenCamera.asStateFlow()
 
-    private val _streamingMessage = MutableStateFlow<String?>(null)
+    private val _streamingMessage = MutableStateFlow<String>("")
     val streamingMessage: StateFlow<String?> = _streamingMessage.asStateFlow()
 
     private val _ttsEnabled = MutableStateFlow(false)

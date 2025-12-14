@@ -13,6 +13,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.ishabdullah.aiish.device.DeviceAllocationManager
 import com.ishabdullah.aiish.embedding.EmbeddingManager
+import com.ishabdullah.aiish.data.local.preferences.PreferencesManager
 import com.ishabdullah.aiish.ml.LLMInferenceEngine
 import com.ishabdullah.aiish.vision.VisionManager
 import kotlinx.coroutines.*

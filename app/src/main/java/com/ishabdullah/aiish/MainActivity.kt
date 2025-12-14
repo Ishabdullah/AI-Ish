@@ -7,7 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import android.app.Application
-import android.app.Application
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,6 +24,7 @@ import com.ishabdullah.aiish.data.local.ConversationDatabase
 import com.ishabdullah.aiish.data.local.preferences.PreferencesManager
 import com.ishabdullah.aiish.data.repository.ChatRepository
 import com.ishabdullah.aiish.ml.LLMInferenceEngine
+import com.ishabdullah.aiish.audio.TTSManager
 import com.ishabdullah.aiish.ui.screens.*
 import com.ishabdullah.aiish.ui.theme.AIIshTheme
 import com.ishabdullah.aiish.ui.viewmodels.ChatViewModel
@@ -91,12 +91,15 @@ fun AiIshNavigation() {
     // Instantiate LLMInferenceEngine
     val llmInferenceEngine = remember { LLMInferenceEngine() }
 
+    // Instantiate TTSManager
+    val ttsManager = remember { TTSManager(application) }
+
     val chatViewModel: ChatViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
-                    return ChatViewModel(application, chatRepository, llmInferenceEngine) as T
+                    return ChatViewModel(application, chatRepository, llmInferenceEngine, ttsManager) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel class")
             }

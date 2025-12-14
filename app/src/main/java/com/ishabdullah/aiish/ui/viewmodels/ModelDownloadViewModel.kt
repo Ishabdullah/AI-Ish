@@ -41,7 +41,7 @@ data class ModelDownloadState(
 class ModelDownloadViewModel(application: Application) : AndroidViewModel(application) {
 
     private val modelManager by lazy {
-        val storageDir = if (preferencesManager.useExternalStorage.first()) {
+        val storageDir = if (runBlocking { preferencesManager.useExternalStorage.first() }) {
             application.getExternalFilesDir(null) ?: application.filesDir
         } else {
             application.filesDir
