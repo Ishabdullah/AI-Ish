@@ -92,6 +92,10 @@ jobs:
           key: ${{ runner.os }}-android-sdk-${{ hashFiles('app/build.gradle.kts') }}
           restore-keys: |
             ${{ runner.os }}-android-sdk-
+    
+      # 🔥 THIS IS THE IMPORTANT PART
+      - name: 🧹 Clean Gradle build (KSP-safe)
+        run: ./gradlew clean --no-daemon
 
       - name: 🏗️ Build Debug APK
         run: ./gradlew assembleDebug --stacktrace --no-daemon
