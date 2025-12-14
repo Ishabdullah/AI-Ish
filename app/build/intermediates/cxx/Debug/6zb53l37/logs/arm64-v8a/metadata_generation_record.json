@@ -1,0 +1,106 @@
+[
+  {
+    "level_": 0,
+    "message_": "Start JSON generation. Platform version: 26 min SDK version: arm64-v8a",
+    "file_": "/home/userland/AI-Ish/app/src/main/cpp/CMakeLists.txt",
+    "tag_": "debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "rebuilding JSON /home/userland/AI-Ish/app/.cxx/Debug/6zb53l37/arm64-v8a/android_gradle_build.json due to:",
+    "file_": "/home/userland/AI-Ish/app/src/main/cpp/CMakeLists.txt",
+    "tag_": "debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "- no fingerprint file, will remove stale configuration folder",
+    "file_": "/home/userland/AI-Ish/app/src/main/cpp/CMakeLists.txt",
+    "tag_": "debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "removing stale contents from \u0027/home/userland/AI-Ish/app/.cxx/Debug/6zb53l37/arm64-v8a\u0027",
+    "file_": "/home/userland/AI-Ish/app/src/main/cpp/CMakeLists.txt",
+    "tag_": "debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "created folder \u0027/home/userland/AI-Ish/app/.cxx/Debug/6zb53l37/arm64-v8a\u0027",
+    "file_": "/home/userland/AI-Ish/app/src/main/cpp/CMakeLists.txt",
+    "tag_": "debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "executing cmake /home/userland/android-sdk/cmake/3.22.1/bin/cmake \\\n  -H/home/userland/AI-Ish/app/src/main/cpp \\\n  -DCMAKE_SYSTEM_NAME\u003dAndroid \\\n  -DCMAKE_EXPORT_COMPILE_COMMANDS\u003dON \\\n  -DCMAKE_SYSTEM_VERSION\u003d26 \\\n  -DANDROID_PLATFORM\u003dandroid-26 \\\n  -DANDROID_ABI\u003darm64-v8a \\\n  -DCMAKE_ANDROID_ARCH_ABI\u003darm64-v8a \\\n  -DANDROID_NDK\u003d/home/userland/android-sdk/ndk/25.1.8937393 \\\n  -DCMAKE_ANDROID_NDK\u003d/home/userland/android-sdk/ndk/25.1.8937393 \\\n  -DCMAKE_TOOLCHAIN_FILE\u003d/home/userland/android-sdk/ndk/25.1.8937393/build/cmake/android.toolchain.cmake \\\n  -DCMAKE_MAKE_PROGRAM\u003d/home/userland/android-sdk/cmake/3.22.1/bin/ninja \\\n  \"-DCMAKE_CXX_FLAGS\u003d-std\u003dc++17 -O3 -DNDEBUG\" \\\n  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY\u003d/home/userland/AI-Ish/app/build/intermediates/cxx/Debug/6zb53l37/obj/arm64-v8a \\\n  -DCMAKE_RUNTIME_OUTPUT_DIRECTORY\u003d/home/userland/AI-Ish/app/build/intermediates/cxx/Debug/6zb53l37/obj/arm64-v8a \\\n  -DCMAKE_BUILD_TYPE\u003dDebug \\\n  -B/home/userland/AI-Ish/app/.cxx/Debug/6zb53l37/arm64-v8a \\\n  -GNinja \\\n  -DANDROID_STL\u003dc++_shared \\\n  -DANDROID_ARM_NEON\u003dON \\\n  -DAIISH_ENABLE_OPENCL\u003dOFF\n",
+    "file_": "/home/userland/AI-Ish/app/src/main/cpp/CMakeLists.txt",
+    "tag_": "debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "/home/userland/android-sdk/cmake/3.22.1/bin/cmake \\\n  -H/home/userland/AI-Ish/app/src/main/cpp \\\n  -DCMAKE_SYSTEM_NAME\u003dAndroid \\\n  -DCMAKE_EXPORT_COMPILE_COMMANDS\u003dON \\\n  -DCMAKE_SYSTEM_VERSION\u003d26 \\\n  -DANDROID_PLATFORM\u003dandroid-26 \\\n  -DANDROID_ABI\u003darm64-v8a \\\n  -DCMAKE_ANDROID_ARCH_ABI\u003darm64-v8a \\\n  -DANDROID_NDK\u003d/home/userland/android-sdk/ndk/25.1.8937393 \\\n  -DCMAKE_ANDROID_NDK\u003d/home/userland/android-sdk/ndk/25.1.8937393 \\\n  -DCMAKE_TOOLCHAIN_FILE\u003d/home/userland/android-sdk/ndk/25.1.8937393/build/cmake/android.toolchain.cmake \\\n  -DCMAKE_MAKE_PROGRAM\u003d/home/userland/android-sdk/cmake/3.22.1/bin/ninja \\\n  \"-DCMAKE_CXX_FLAGS\u003d-std\u003dc++17 -O3 -DNDEBUG\" \\\n  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY\u003d/home/userland/AI-Ish/app/build/intermediates/cxx/Debug/6zb53l37/obj/arm64-v8a \\\n  -DCMAKE_RUNTIME_OUTPUT_DIRECTORY\u003d/home/userland/AI-Ish/app/build/intermediates/cxx/Debug/6zb53l37/obj/arm64-v8a \\\n  -DCMAKE_BUILD_TYPE\u003dDebug \\\n  -B/home/userland/AI-Ish/app/.cxx/Debug/6zb53l37/arm64-v8a \\\n  -GNinja \\\n  -DANDROID_STL\u003dc++_shared \\\n  -DANDROID_ARM_NEON\u003dON \\\n  -DAIISH_ENABLE_OPENCL\u003dOFF\n",
+    "file_": "/home/userland/AI-Ish/app/src/main/cpp/CMakeLists.txt",
+    "tag_": "debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "JSON generation completed with problem. Exception: org.gradle.process.internal.ExecException: A problem occurred starting process \u0027command \u0027/home/userland/android-sdk/cmake/3.22.1/bin/cmake\u0027\u0027",
+    "file_": "/home/userland/AI-Ish/app/src/main/cpp/CMakeLists.txt",
+    "tag_": "debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  }
+]
