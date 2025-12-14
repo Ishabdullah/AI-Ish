@@ -161,7 +161,7 @@ dependencies {
 
     // TensorFlow Lite with NNAPI delegate for NPU acceleration
     implementation("org.tensorflow:tensorflow-lite:2.15.0") // Updated
-    implementation("org.tensorflow:tensorflow-lite-support:0.6.0") // Updated
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4") // Updated
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1") // No change
