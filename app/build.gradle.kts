@@ -146,7 +146,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // DataStore
-    implementation("androidx.datastore:datastore-preferences:1.0.0") // No change
+    implementation("androidx.datastore:datastore-preferences:1.1.1") // Updated
 
     // CameraX
     val cameraxVersion = "1.3.2" // Updated
