@@ -7,6 +7,17 @@
 - **Files**: `app/src/test/java/com/ishabdullah/aiish/ui/viewmodels/ChatViewModelTest.kt`
 - **Commit**: `8157de9`
 
+## 2025-12-15: Fix Unnecessary Mockito Stubbings in Test
+- **Error**: `UnnecessaryStubbingException` on test `unnecessary Mockito stubbings FAILED`
+- **Root Cause**: Mock stubs were set up for `conversationDatabase.conversationDao()` and `conversationDao.getAllConversations()` but these stubs were never actually used during test execution. The test creates `ChatRepository` directly with `conversationDao`, bypassing the `conversationDatabase` mock entirely, causing Mockito's strict mode to flag the unused stubs.
+- **Fix**: 
+  1. Removed the unused `conversationDatabase` mock field and its import
+  2. Removed the unused stub setup for `conversationDatabase.conversationDao()`
+  3. Removed the unused stub setup for `conversationDao.getAllConversations()`
+  4. Kept the direct initialization of `ChatRepository` with the mocked `conversationDao`
+- **Files**: `app/src/test/java/com/ishabdullah/aiish/ui/viewmodels/ChatViewModelTest.kt`
+- **Commit**: `8a4d624`
+
 ## 2025-12-15: Fix Suspend Function Call in Test Setup
 - **Error**: `ChatViewModelTest.kt:69:27 Suspend function 'initialize' should be called only from a coroutine or another suspend function`
 - **Root Cause**: The test setup method was attempting to mock `ttsManager.initialize()` which is a suspend function. Suspend functions cannot be called from synchronous methods like `@Before` setup().
