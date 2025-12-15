@@ -79,7 +79,7 @@ class ChatViewModelTest {
         assert(chatViewModel.messages.first().isEmpty())
         assert(!chatViewModel.isLoading.value)
         assert(!chatViewModel.shouldOpenCamera.value)
-        assert(chatViewModel.streamingMessage.value.isEmpty())
+        assert(chatViewModel.streamingMessage.value.isNullOrEmpty())
     }
 
     @Test
