@@ -7,6 +7,15 @@
 - **Files**: `app/src/test/java/com/ishabdullah/aiish/ui/viewmodels/ChatViewModelTest.kt`
 - **Commit**: `8157de9`
 
+## 2025-12-15: Fix DEX Compilation Error - Spaces in Test Method Names
+- **Error**: `D8: Space characters in SimpleName 'nativeLoadModel returns error for non-existent model path' are not allowed prior to DEX version 040`
+- **Root Cause**: Kotlin backtick-quoted test method names with spaces are compiled to method names containing spaces, which the D8 DEX compiler doesn't support. DEX format requires method names without spaces.
+- **Fix**: Renamed test methods from backtick-quoted names with spaces to camelCase names without spaces:
+  1. `` `nativeLoadModel returns error for non-existent model path` `` → `loadModelReturnsErrorForNonExistentModelPath`
+  2. `` `nativeLoadModel and nativeFree handle valid cycle (mocked)` `` → `loadModelAndFreeHandleValidCycleMocked`
+- **Files**: `app/src/androidTest/java/com/ishabdullah/aiish/ml/LLMInferenceEngineIntegrationTest.kt`
+- **Commit**: `03320d9`
+
 ## 2025-12-15: Fix Suspend Function Calls in Android Integration Tests
 - **Error**: `LLMInferenceEngineIntegrationTest.kt:33:42` and `:55:42 Suspend function 'loadModel' should be called only from a coroutine or another suspend function`
 - **Root Cause**: The Android instrumented test methods were attempting to call `loadModel()`, a suspend function, from synchronous test methods without a coroutine context.
