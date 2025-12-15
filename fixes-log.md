@@ -7,12 +7,9 @@
 - **Files**: `app/src/test/java/com/ishabdullah/aiish/ui/viewmodels/ChatViewModelTest.kt`
 - **Commit**: `8157de9`
 
-## 2025-12-15: Fix Uncaught Coroutine Exceptions in Tests
-- **Error**: `com.ishabdullah.aiish.ui.viewmodels.ChatViewModelTest > sendMessage adds user message and sets loading state FAILED` (and `initial state is correct FAILED`)
-- **Exception**: `kotlinx.coroutines.test.UncaughtExceptionsBeforeTest`
-- **Analysis**: The tests are failing due to uncaught exceptions in coroutines, likely triggered during `ChatViewModel` initialization. Specifically, `viewModelScope.launch` blocks in `init` (TTS init, Transcription collection) might be throwing exceptions that aren't handled or mocked correctly in the test environment, causing the test runner to fail before the test logic completes. The `UncaughtExceptionsBeforeTest` often indicates background jobs from `init` failing.
-- **Fix**: 
-    1.  Ensure all dependencies used in `init` blocks (`TTSManager`, `TranscriptionBroadcaster`) are properly mocked.
-    2.  `TranscriptionBroadcaster` is a static/object dependency, which is hard to mock directly. We might need to wrap it or mock its Flow if possible, or ensure the ViewModel handles its potential absence/failure gracefully in tests.
-    3.  Review `ChatViewModel` init block to ensure robust error handling for background tasks.
-- **Files**: `app/src/test/java/com/ishabdullah/aiish/ui/viewmodels/ChatViewModelTest.kt`, `app/src/main/java/com/ishabdullah/aiish/ui/viewmodels/ChatViewModel.kt`
+## 2025-12-15: Fix Suspend Function Call in Test Setup
+- **Error**: `ChatViewModelTest.kt:69:27 Suspend function 'initialize' should be called only from a coroutine or another suspend function`
+- **Root Cause**: The test setup method was attempting to mock `ttsManager.initialize()` which is a suspend function. Suspend functions cannot be called from synchronous methods like `@Before` setup().
+- **Fix**: Removed the mock stub `when(ttsManager.initialize()).thenReturn(true)` from the setup() method. The mocked ttsManager is already provided to the ViewModel constructor and will be used correctly during initialization within the test's coroutine context (testScope.runTest).
+- **Files**: `app/src/test/java/com/ishabdullah/aiish/ui/viewmodels/ChatViewModelTest.kt`
+- **Commit**: `658f776`
