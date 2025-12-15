@@ -13,7 +13,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
-import com.ishabdullah.aiish.data.local.ConversationDatabase
 import com.ishabdullah.aiish.data.local.ConversationDao
 import com.ishabdullah.aiish.data.repository.ChatRepository
 import com.ishabdullah.aiish.ml.LLMInferenceEngine
@@ -39,9 +38,6 @@ class ChatViewModelTest {
     private lateinit var application: Application
 
     @Mock
-    private lateinit var conversationDatabase: ConversationDatabase
-
-    @Mock
     private lateinit var conversationDao: ConversationDao
 
     @Mock
@@ -58,11 +54,7 @@ class ChatViewModelTest {
         MockitoAnnotations.openMocks(this)
         Dispatchers.setMain(testDispatcher)
 
-        // Mock ConversationDatabase and ConversationDao
-        `when`(conversationDatabase.conversationDao()).thenReturn(conversationDao)
-        `when`(conversationDao.getAllConversations()).thenReturn(flowOf(emptyList())) // Default empty list
-
-        // Initialize ChatRepository with mocked dependencies
+        // Initialize ChatRepository with mocked conversationDao
         chatRepository = ChatRepository(conversationDao)
 
         // Initialize ChatViewModel with mocked dependencies
