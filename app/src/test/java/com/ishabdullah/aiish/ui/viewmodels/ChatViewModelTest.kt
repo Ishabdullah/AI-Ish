@@ -65,6 +65,9 @@ class ChatViewModelTest {
         // Initialize ChatRepository with mocked dependencies
         chatRepository = ChatRepository(conversationDao)
 
+        // Stub TTS Manager
+        `when`(ttsManager.initialize()).thenReturn(true)
+
         // Initialize ChatViewModel with mocked dependencies
         chatViewModel = ChatViewModel(application, chatRepository, llmInferenceEngine, ttsManager)
     }

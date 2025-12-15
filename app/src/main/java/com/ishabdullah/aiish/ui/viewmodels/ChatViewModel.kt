@@ -52,28 +52,40 @@ class ChatViewModel(
 
         // Collect messages from repository into _messages
         viewModelScope.launch {
-            chatRepository.getAllMessages.collect {
-                _messages.value = it
+            try {
+                chatRepository.getAllMessages.collect {
+                    _messages.value = it
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error collecting messages")
             }
         }
 
         // Initialize TTS
         viewModelScope.launch {
-            val success = ttsManager.initialize()
-            if (success) {
-                Timber.i("TTS initialized successfully")
-            } else {
-                Timber.w("TTS initialization failed")
+            try {
+                val success = ttsManager.initialize()
+                if (success) {
+                    Timber.i("TTS initialized successfully")
+                } else {
+                    Timber.w("TTS initialization failed")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error initializing TTS")
             }
         }
 
         // Collect transcriptions from ContinuousListeningService
         viewModelScope.launch {
-            TranscriptionBroadcaster.transcriptionFlow.collect { transcription ->
-                Timber.d("Received transcription: $transcription")
-                if (transcription.isNotBlank()) {
-                    sendMessage(transcription) // Process as user message
+            try {
+                TranscriptionBroadcaster.transcriptionFlow.collect { transcription ->
+                    Timber.d("Received transcription: $transcription")
+                    if (transcription.isNotBlank()) {
+                        sendMessage(transcription) // Process as user message
+                    }
                 }
+            } catch (e: Exception) {
+                Timber.e(e, "Error collecting transcriptions")
             }
         }
     }
