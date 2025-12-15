@@ -7,6 +7,13 @@
 - **Files**: `app/src/test/java/com/ishabdullah/aiish/ui/viewmodels/ChatViewModelTest.kt`
 - **Commit**: `8157de9`
 
+## 2025-12-15: Fix Suspend Function Calls in Android Integration Tests
+- **Error**: `LLMInferenceEngineIntegrationTest.kt:33:42` and `:55:42 Suspend function 'loadModel' should be called only from a coroutine or another suspend function`
+- **Root Cause**: The Android instrumented test methods were attempting to call `loadModel()`, a suspend function, from synchronous test methods without a coroutine context.
+- **Fix**: Wrapped both `loadModel()` calls (lines 33-36 and 58-60) with `runBlocking {}` to create a coroutine context for the suspend function calls. Also added the import for `kotlinx.coroutines.runBlocking`.
+- **Files**: `app/src/androidTest/java/com/ishabdullah/aiish/ml/LLMInferenceEngineIntegrationTest.kt`
+- **Commit**: `92edb1d`
+
 ## 2025-12-15: Fix Unnecessary Mockito Stubbings in Test
 - **Error**: `UnnecessaryStubbingException` on test `unnecessary Mockito stubbings FAILED`
 - **Root Cause**: Mock stubs were set up for `conversationDatabase.conversationDao()` and `conversationDao.getAllConversations()` but these stubs were never actually used during test execution. The test creates `ChatRepository` directly with `conversationDao`, bypassing the `conversationDatabase` mock entirely, causing Mockito's strict mode to flag the unused stubs.
