@@ -8,6 +8,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import kotlinx.coroutines.runBlocking
 
 /**
  * Integration tests for LLMInferenceEngine JNI layer.
@@ -30,7 +31,9 @@ class LLMInferenceEngineIntegrationTest {
         val modelFile = File(nonExistentPath)
 
         // Attempt to load a non-existent model
-        val success = llmInferenceEngine.loadModel(modelFile.absolutePath, 0, 0)
+        val success = runBlocking {
+            llmInferenceEngine.loadModel(modelFile.absolutePath, 0, 0)
+        }
 
         // Expect it to fail
         assertFalse("Loading a non-existent model should fail", success)
@@ -52,7 +55,9 @@ class LLMInferenceEngineIntegrationTest {
         // For actual native behavior testing, you'd need C++ side mocks or a proper test model.
         // For now, we assume nativeLoadModel will fail for the dummy file as it's not a valid GGUF.
 
-        val success = llmInferenceEngine.loadModel(dummyModelFile.absolutePath, 0, 0)
+        val success = runBlocking {
+            llmInferenceEngine.loadModel(dummyModelFile.absolutePath, 0, 0)
+        }
         
         // Assert that loading failed, because it's a dummy file and not a real GGUF
         assertFalse("Loading a dummy model should fail", success)
