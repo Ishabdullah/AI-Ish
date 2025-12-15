@@ -26,7 +26,7 @@ class LLMInferenceEngineIntegrationTest {
     }
 
     @Test
-    fun `nativeLoadModel returns error for non-existent model path`() {
+    fun loadModelReturnsErrorForNonExistentModelPath() {
         val nonExistentPath = "/path/to/non_existent_model.gguf"
         val modelFile = File(nonExistentPath)
 
@@ -41,7 +41,7 @@ class LLMInferenceEngineIntegrationTest {
     }
 
     @Test
-    fun `nativeLoadModel and nativeFree handle valid cycle (mocked)`() {
+    fun loadModelAndFreeHandleValidCycleMocked() {
         // This test cannot fully validate actual model loading without a real model file.
         // Instead, it verifies that calling load and then free does not crash and
         // sets the isModelLoaded flag correctly.
